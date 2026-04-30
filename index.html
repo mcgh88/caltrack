@@ -59,7 +59,7 @@ html, body {
 /* --- PANELS --- */
 .panel {
   position: absolute; top: 0; left: 0; right: 0;
-  bottom: 60px; /* tab bar height */
+  bottom: 60px;
   padding: 20px 16px 20px;
   overflow-y: auto;
   display: none;
@@ -93,7 +93,6 @@ html, body {
 }
 .date-nav .date-label.today-highlight { color: var(--accent); }
 
-/* Calorie summary bar */
 .cal-summary {
   display: flex; justify-content: space-between; align-items: center;
   background: var(--surface); border-radius: var(--radius);
@@ -106,7 +105,6 @@ html, body {
 .cal-summary .remaining.under { color: var(--green); }
 .cal-summary .of-target { font-size: 12px; color: var(--text-dim); }
 
-/* Progress bar */
 .cal-bar-wrap {
   height: 6px; background: var(--surface); border-radius: 3px;
   margin-bottom: 20px; overflow: hidden;
@@ -117,7 +115,6 @@ html, body {
 }
 .cal-bar.over { background: var(--accent); }
 
-/* Food list */
 .food-list { margin-bottom: 16px; }
 .food-item {
   display: flex; justify-content: space-between; align-items: center;
@@ -126,25 +123,18 @@ html, body {
   font-family: var(--mono); font-size: 14px;
 }
 .food-item .food-name { flex: 1; margin-right: 8px; word-break: break-word; }
-.food-item .food-cal { 
-  font-weight: 600; color: var(--green); white-space: nowrap; margin-right: 8px; 
-}
-.food-item .food-expr { 
-  font-size: 11px; color: var(--text-dim); margin-left: 4px; 
-}
+.food-item .food-cal { font-weight: 600; color: var(--green); white-space: nowrap; margin-right: 8px; }
+.food-item .food-expr { font-size: 11px; color: var(--text-dim); margin-left: 4px; }
 .food-item .delete-food {
   background: none; border: none; color: var(--text-faint);
   font-size: 16px; cursor: pointer; padding: 4px 6px;
 }
 
-/* Input area */
 .input-area {
   background: var(--surface); border-radius: var(--radius);
   padding: 12px; margin-bottom: 12px;
 }
-.input-row {
-  display: flex; gap: 8px; margin-bottom: 8px;
-}
+.input-row { display: flex; gap: 8px; margin-bottom: 8px; }
 .input-row:last-child { margin-bottom: 0; }
 .input-area input, .input-area select {
   flex: 1; background: var(--bg); border: 1px solid var(--text-faint);
@@ -162,13 +152,10 @@ html, body {
 .btn:active { transform: scale(0.97); }
 .btn-accent { background: var(--accent); color: white; }
 .btn-green { background: var(--green); color: var(--bg); }
-.btn-outline { 
-  background: none; border: 1px solid var(--text-faint); color: var(--text); 
-}
+.btn-outline { background: none; border: 1px solid var(--text-faint); color: var(--text); }
 .btn-sm { padding: 8px 14px; font-size: 12px; }
 .btn-block { width: 100%; }
 
-/* Day status */
 .day-status {
   text-align: center; padding: 10px;
   font-size: 13px; color: var(--text-dim);
@@ -176,44 +163,6 @@ html, body {
 }
 .day-status.submitted { color: var(--green); }
 
-/* Autocomplete */
-.autocomplete-wrap { position: relative; flex: 1; }
-.autocomplete-list {
-  position: absolute; top: 100%; left: 0; right: 0;
-  background: var(--surface2); border-radius: 8px;
-  max-height: 180px; overflow-y: auto; z-index: 50;
-  border: 1px solid var(--text-faint);
-  display: none;
-}
-.autocomplete-list.show { display: block; }
-.autocomplete-item {
-  padding: 10px 12px; cursor: pointer;
-  font-family: var(--mono); font-size: 13px;
-  display: flex; justify-content: space-between;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-}
-.autocomplete-item:hover, .autocomplete-item.highlighted { background: rgba(233,69,96,0.15); }
-.autocomplete-item .ac-cal { color: var(--green); font-size: 12px; }
-
-/* Weight entry on day panel */
-.weight-entry {
-  background: var(--surface); border-radius: var(--radius);
-  padding: 12px; margin-bottom: 12px;
-  display: flex; align-items: center; gap: 8px;
-}
-.weight-entry label {
-  font-family: var(--mono); font-size: 13px; color: var(--text-dim);
-  white-space: nowrap;
-}
-.weight-entry input {
-  flex: 1; background: var(--bg); border: 1px solid var(--text-faint);
-  color: var(--text); font-family: var(--mono); font-size: 14px;
-  padding: 8px 10px; border-radius: 8px; outline: none; max-width: 100px;
-}
-.weight-entry input:focus { border-color: var(--accent); }
-.weight-entry .weight-unit { color: var(--text-dim); font-size: 13px; }
-
-/* Drink tracking */
 .drink-entry {
   background: var(--surface); border-radius: var(--radius);
   padding: 12px; margin-bottom: 12px;
@@ -223,49 +172,25 @@ html, body {
   font-family: var(--mono); font-size: 13px; color: var(--text-dim);
   white-space: nowrap;
 }
-.drink-entry input {
-  flex: 1; background: var(--bg); border: 1px solid var(--text-faint);
-  color: var(--text); font-family: var(--mono); font-size: 14px;
-  padding: 8px 10px; border-radius: 8px; outline: none; max-width: 60px;
-  text-align: center;
-}
 
 /* --- GRAPH PANEL --- */
-.graph-controls {
-  display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
-}
-.graph-controls input[type="date"] {
-  background: var(--surface); border: 1px solid var(--text-faint);
-  color: var(--text); font-family: var(--mono); font-size: 13px;
-  padding: 8px 10px; border-radius: 8px; outline: none;
-}
-.graph-controls input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.7);
-}
+.graph-controls { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
 .canvas-wrap {
   background: var(--surface); border-radius: var(--radius);
   padding: 12px; margin-bottom: 16px; overflow: hidden;
 }
 canvas { width: 100%; height: 250px; display: block; }
 
-.legend {
-  display: flex; gap: 16px; justify-content: center;
-  margin-bottom: 16px; font-size: 12px;
-}
+.legend { display: flex; gap: 16px; justify-content: center; margin-bottom: 16px; font-size: 12px; }
 .legend-item { display: flex; align-items: center; gap: 6px; }
-.legend-dot {
-  width: 10px; height: 10px; border-radius: 50%;
-}
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
 
 /* --- SETTINGS PANEL --- */
 .setting-group {
   background: var(--surface); border-radius: var(--radius);
   padding: 16px; margin-bottom: 12px;
 }
-.setting-group h3 {
-  font-family: var(--mono); font-size: 14px;
-  color: var(--text-dim); margin-bottom: 12px;
-}
+.setting-group h3 { font-family: var(--mono); font-size: 14px; color: var(--text-dim); margin-bottom: 12px; }
 .setting-row {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 10px;
@@ -303,29 +228,13 @@ canvas { width: 100%; height: 250px; display: block; }
 }
 .toast.show { opacity: 1; }
 
-/* Responsive */
-@media (max-width: 380px) {
-  .cal-summary .eaten { font-size: 24px; }
-}
-
-/* date input fix for iOS */
+@media (max-width: 380px) { .cal-summary .eaten { font-size: 24px; } }
 input[type="date"] { -webkit-appearance: none; }
-
-/* Scrollbar */
 .panel::-webkit-scrollbar { width: 4px; }
 .panel::-webkit-scrollbar-thumb { background: var(--text-faint); border-radius: 2px; }
-
-/* No data message */
-.no-data {
-  text-align: center; padding: 40px 20px;
-  color: var(--text-dim); font-size: 14px;
-}
-
-/* data management */
+.no-data { text-align: center; padding: 40px 20px; color: var(--text-dim); font-size: 14px; }
 .danger-zone { margin-top: 24px; }
 .btn-danger { background: rgba(233,69,96,0.15); color: var(--accent); border: 1px solid var(--accent); }
-
-/* Long term chart */
 #panel-longterm .canvas-wrap { touch-action: pan-y; }
 
 /* Calendar */
@@ -333,14 +242,8 @@ input[type="date"] { -webkit-appearance: none; }
   font-family: var(--mono); font-size: 14px; font-weight: 600;
   text-align: center; padding: 12px 0 8px; color: var(--text);
 }
-.cal-grid {
-  display: grid; grid-template-columns: repeat(7, 1fr);
-  gap: 3px; margin-bottom: 16px;
-}
-.cal-dow {
-  text-align: center; font-family: var(--mono); font-size: 10px;
-  color: var(--text-faint); padding: 4px 0;
-}
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 16px; }
+.cal-dow { text-align: center; font-family: var(--mono); font-size: 10px; color: var(--text-faint); padding: 4px 0; }
 .cal-cell {
   aspect-ratio: 1; border-radius: 6px; display: flex;
   flex-direction: column; align-items: center; justify-content: center;
@@ -354,39 +257,46 @@ input[type="date"] { -webkit-appearance: none; }
 .cal-cell.warn { background: rgba(240,192,64,0.3); color: var(--yellow); }
 .cal-cell.penalty { background: rgba(155,89,182,0.4); color: var(--purple); }
 .cal-cell.today-cell { outline: 2px solid var(--accent); outline-offset: -2px; }
-.cal-cell .cal-drink {
-  position: absolute; bottom: 1px; right: 2px;
-  font-size: 12px; line-height: 1;
-}
-.cal-cell .cal-weight {
-  position: absolute; bottom: 1px; left: 2px;
-  font-size: 8px; line-height: 1; font-family: var(--mono);
-}
+.cal-cell .cal-drink { position: absolute; bottom: 1px; right: 2px; font-size: 12px; line-height: 1; }
+.cal-cell .cal-weight { position: absolute; bottom: 1px; left: 2px; font-size: 8px; line-height: 1; font-family: var(--mono); }
 .cal-cell .cal-weight.actual { color: #4ecca3; }
 .cal-cell .cal-weight.calculated { color: #8892a4; }
 .cal-cell .cal-weight.projected { color: rgba(78,204,163,0.5); }
 .cal-cell .cal-day-num { font-weight: 600; font-size: 12px; }
 .cal-cell .cal-day-cals { font-size: 9px; opacity: 0.8; }
 
-/* My Foods */
-.mf-item {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 10px 12px; background: var(--surface);
-  border-radius: 8px; margin-bottom: 6px;
-  font-family: var(--mono); font-size: 14px;
+/* Weight Modal */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6); z-index: 300;
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
 }
-.mf-item .mf-name { flex: 1; margin-right: 8px; }
-.mf-item .mf-cal { font-weight: 600; color: var(--green); margin-right: 8px; }
-.mf-item .mf-actions { display: flex; gap: 4px; }
-.mf-item .mf-btn {
-  background: none; border: none; color: var(--text-faint);
-  font-size: 14px; cursor: pointer; padding: 4px 6px;
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 24px; width: 100%; max-width: 320px;
 }
-.mf-item .mf-btn:hover { color: var(--text); }
-.mf-count {
-  font-size: 12px; color: var(--text-dim); margin-bottom: 12px;
-  font-family: var(--mono);
+.modal-title {
+  font-family: var(--mono); font-size: 18px; font-weight: 700;
+  margin-bottom: 4px; color: var(--text);
 }
+.modal-subtitle {
+  font-family: var(--mono); font-size: 13px; color: var(--text-dim);
+  margin-bottom: 20px;
+}
+.modal-input-wrap {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
+}
+.modal-input-wrap input {
+  flex: 1; background: var(--bg); border: 1px solid var(--text-faint);
+  color: var(--text); font-family: var(--mono); font-size: 20px;
+  padding: 12px 14px; border-radius: 8px; outline: none; text-align: center;
+}
+.modal-input-wrap input:focus { border-color: var(--accent); }
+.modal-input-wrap .weight-unit { color: var(--text-dim); font-family: var(--mono); font-size: 14px; }
+.modal-buttons { display: flex; gap: 8px; }
+.modal-buttons .btn { flex: 1; }
 </style>
 </head>
 <body>
@@ -400,10 +310,6 @@ input[type="date"] { -webkit-appearance: none; }
   <button class="tab-btn" data-tab="history">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
     History
-  </button>
-  <button class="tab-btn" data-tab="myfoods">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-    My Foods
   </button>
   <button class="tab-btn" data-tab="graph">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -430,7 +336,6 @@ input[type="date"] { -webkit-appearance: none; }
     <span class="date-label today-highlight" id="current-date-label"></span>
     <button id="next-day">&rarr;</button>
   </div>
-
   <div class="cal-summary">
     <div>
       <div class="eaten" id="day-eaten">0</div>
@@ -442,33 +347,20 @@ input[type="date"] { -webkit-appearance: none; }
     </div>
   </div>
   <div class="cal-bar-wrap"><div class="cal-bar" id="day-bar"></div></div>
-
   <div class="food-list" id="food-list"></div>
-
   <div class="input-area">
     <div class="input-row">
-      <div class="autocomplete-wrap">
-        <input type="text" id="food-name" placeholder="food name" autocomplete="off" autocapitalize="off">
-        <div class="autocomplete-list" id="autocomplete-list"></div>
-      </div>
+      <input type="text" id="food-name" placeholder="food name" autocomplete="off" autocapitalize="off">
     </div>
     <div class="input-row">
       <input type="text" id="food-cal" placeholder="cals (e.g. 170*3)" inputmode="text" autocomplete="off">
       <button class="btn btn-accent" id="add-food-btn">Add</button>
     </div>
   </div>
-
-  <div class="weight-entry">
-    <label>morning weight:</label>
-    <input type="number" id="day-weight" placeholder="—" step="0.1" inputmode="decimal">
-    <span class="weight-unit">lbs</span>
-  </div>
-
   <div class="drink-entry">
     <label>drank:</label>
     <button class="btn btn-sm" id="drink-toggle" style="min-width:60px;">No</button>
   </div>
-
   <div class="day-status" id="day-status"></div>
   <div style="display:flex;gap:8px;">
     <button class="btn btn-green btn-block" id="submit-day-btn">Submit Day</button>
@@ -482,23 +374,6 @@ input[type="date"] { -webkit-appearance: none; }
   <div id="history-list"></div>
 </div>
 
-<!-- MY FOODS PANEL -->
-<div class="panel" id="panel-myfoods">
-  <div class="panel-header">My Foods</div>
-  <div class="input-area" style="margin-bottom:16px;">
-    <div class="input-row">
-      <input type="text" id="mf-name" placeholder="food name" autocomplete="off">
-      <input type="text" id="mf-cal" placeholder="calories" inputmode="numeric" style="max-width:100px;">
-      <button class="btn btn-accent btn-sm" id="mf-add-btn">Add</button>
-    </div>
-  </div>
-  <div class="input-area" style="margin-bottom:16px;padding:8px 12px;">
-    <input type="text" id="mf-search" placeholder="search my foods..." autocomplete="off" style="background:var(--bg);border:1px solid var(--text-faint);color:var(--text);font-family:var(--mono);font-size:14px;padding:8px 10px;border-radius:8px;outline:none;width:100%;">
-  </div>
-  <div id="myfoods-list"></div>
-  <div class="no-data" id="myfoods-empty">Foods you log will appear here automatically.<br>You can also add them manually above.</div>
-</div>
-
 <!-- GRAPH PANEL -->
 <div class="panel" id="panel-graph">
   <div class="panel-header">Weight & Trends</div>
@@ -510,12 +385,8 @@ input[type="date"] { -webkit-appearance: none; }
     <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Actual</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Projected</div>
   </div>
-  <div class="canvas-wrap">
-    <canvas id="weight-chart" height="250"></canvas>
-  </div>
-  <div class="canvas-wrap">
-    <canvas id="calorie-chart" height="200"></canvas>
-  </div>
+  <div class="canvas-wrap"><canvas id="weight-chart" height="250"></canvas></div>
+  <div class="canvas-wrap"><canvas id="calorie-chart" height="200"></canvas></div>
   <div class="legend">
     <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Calories</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div> Target</div>
@@ -528,7 +399,7 @@ input[type="date"] { -webkit-appearance: none; }
   <div class="legend" style="margin-bottom:8px;">
     <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Under target</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Over target</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div> 🍺 Drank</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div> &#x1F37A; Drank</div>
   </div>
   <div id="calendar-grid"></div>
 </div>
@@ -546,9 +417,7 @@ input[type="date"] { -webkit-appearance: none; }
     <div class="legend-item"><div class="legend-dot" style="background:#4ecca3"></div> Year low</div>
     <div class="legend-item"><div class="legend-dot" style="background:#e94560"></div> Year high</div>
   </div>
-  <div class="canvas-wrap">
-    <canvas id="lt-chart" height="300"></canvas>
-  </div>
+  <div class="canvas-wrap"><canvas id="lt-chart" height="300"></canvas></div>
   <div id="lt-stats" style="background:var(--surface);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;font-family:var(--mono);font-size:13px;color:var(--text-dim);"></div>
   <div id="lt-all-time-stats" style="background:var(--surface);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;font-family:var(--mono);font-size:13px;color:var(--text-dim);"></div>
 </div>
@@ -584,7 +453,7 @@ input[type="date"] { -webkit-appearance: none; }
     <div style="font-size:11px;color:var(--text-faint);margin-top:4px;font-family:var(--mono);">Three-tier: green=under target, yellow=over target but under TDEE, red=over TDEE</div>
   </div>
   <div class="setting-group">
-    <h3>// weight</h3>
+    <h3>// view range</h3>
     <div class="setting-row">
       <label>Goal weight (lbs)</label>
       <input type="number" id="set-goal-weight" placeholder="180" step="0.1" inputmode="decimal">
@@ -594,12 +463,12 @@ input[type="date"] { -webkit-appearance: none; }
       <input type="date" id="set-start-date">
     </div>
     <div class="setting-row">
-      <label>Weeks to track</label>
+      <label>Weeks to display</label>
       <input type="number" id="set-weeks" placeholder="12" min="1" max="104" inputmode="numeric">
     </div>
+    <div style="font-size:11px;color:var(--text-faint);margin-top:8px;font-family:var(--mono);">Start date and weeks only control what's shown on the Graph and Calendar tabs. All calculations use your full history.</div>
   </div>
   <button class="btn btn-green btn-block" id="save-settings-btn">Save Settings</button>
-
   <div class="setting-group danger-zone">
     <h3>// data</h3>
     <div class="setting-row">
@@ -628,6 +497,23 @@ input[type="date"] { -webkit-appearance: none; }
   </div>
 </div>
 
+<!-- WEIGHT MODAL -->
+<div class="modal-overlay" id="weight-modal">
+  <div class="modal">
+    <div class="modal-title">Morning Weight</div>
+    <div class="modal-subtitle" id="weight-modal-date"></div>
+    <div class="modal-input-wrap">
+      <input type="number" id="weight-modal-input" placeholder="—" step="0.1" inputmode="decimal">
+      <span class="weight-unit">lbs</span>
+    </div>
+    <div class="modal-buttons">
+      <button class="btn btn-outline" id="weight-modal-cancel">Cancel</button>
+      <button class="btn btn-danger btn-sm" id="weight-modal-clear" style="display:none;">Clear</button>
+      <button class="btn btn-green" id="weight-modal-save">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -637,99 +523,11 @@ input[type="date"] { -webkit-appearance: none; }
 // ============================================================
 const STORAGE_KEY = 'caltrack_data';
 
-const COMMON_FOODS = [
-  {n:'apple',c:95},{n:'banana',c:105},{n:'orange',c:62},{n:'grapes (cup)',c:104},
-  {n:'strawberries (cup)',c:49},{n:'blueberries (cup)',c:84},{n:'watermelon (cup)',c:46},
-  {n:'avocado',c:240},{n:'egg',c:72},{n:'egg whites (3)',c:51},
-  {n:'chicken breast (4oz)',c:130},{n:'chicken thigh',c:210},{n:'ground beef (4oz)',c:280},
-  {n:'ground turkey (4oz)',c:170},{n:'salmon (4oz)',c:230},{n:'tuna (can)',c:100},
-  {n:'shrimp (4oz)',c:100},{n:'bacon (2 slices)',c:90},{n:'turkey deli (2oz)',c:60},
-  {n:'ham deli (2oz)',c:60},{n:'hot dog',c:190},{n:'sausage link',c:170},
-  {n:'meatball',c:70},{n:'steak (6oz)',c:400},
-  {n:'rice (cup cooked)',c:205},{n:'pasta (cup cooked)',c:220},{n:'bread slice',c:80},
-  {n:'bagel',c:270},{n:'tortilla (flour)',c:140},{n:'tortilla (corn)',c:60},
-  {n:'english muffin',c:130},{n:'pancake',c:175},{n:'waffle',c:220},
-  {n:'oatmeal (cup)',c:150},{n:'cereal (cup)',c:150},{n:'granola bar',c:140},
-  {n:'crackers (10)',c:120},{n:'chips (oz)',c:150},{n:'popcorn (3 cups)',c:100},
-  {n:'pretzels (oz)',c:110},{n:'peanut butter (tbsp)',c:95},{n:'almonds (oz)',c:164},
-  {n:'cheese slice',c:110},{n:'string cheese',c:80},{n:'cream cheese (oz)',c:100},
-  {n:'cottage cheese (cup)',c:220},{n:'yogurt (cup)',c:150},{n:'greek yogurt (cup)',c:130},
-  {n:'milk (cup)',c:150},{n:'almond milk (cup)',c:30},{n:'butter (tbsp)',c:100},
-  {n:'olive oil (tbsp)',c:120},{n:'mayo (tbsp)',c:100},{n:'ranch (tbsp)',c:73},
-  {n:'ketchup (tbsp)',c:20},{n:'mustard (tbsp)',c:10},{n:'soy sauce (tbsp)',c:10},
-  {n:'salsa (2tbsp)',c:10},{n:'hummus (2tbsp)',c:70},
-  {n:'broccoli (cup)',c:55},{n:'carrots (cup)',c:52},{n:'corn (ear)',c:90},
-  {n:'potato (medium)',c:160},{n:'sweet potato',c:110},{n:'french fries (small)',c:230},
-  {n:'baked potato',c:160},{n:'salad (side)',c:20},{n:'coleslaw (cup)',c:180},
-  {n:'soup (cup)',c:150},{n:'chili (cup)',c:250},
-  {n:'pizza slice',c:285},{n:'burger (fast food)',c:350},{n:'cheeseburger',c:400},
-  {n:'grilled cheese',c:370},{n:'PB&J',c:350},{n:'BLT',c:300},
-  {n:'sub sandwich (6in)',c:400},{n:'taco',c:170},{n:'burrito',c:500},
-  {n:'quesadilla',c:470},{n:'mac and cheese (cup)',c:350},
-  {n:'fried rice (cup)',c:230},{n:'spaghetti w/ sauce (cup)',c:300},
-  {n:'lasagna (piece)',c:350},{n:'chicken nuggets (6)',c:280},
-  {n:'fish sticks (4)',c:200},{n:'meatloaf (slice)',c:250},
-  {n:'soda (12oz)',c:140},{n:'soda (20oz)',c:240},{n:'diet soda',c:0},
-  {n:'juice (8oz)',c:120},{n:'coffee black',c:5},{n:'coffee w/ cream',c:50},
-  {n:'latte',c:190},{n:'beer',c:150},{n:'light beer',c:100},
-  {n:'wine (glass)',c:125},{n:'cocktail',c:200},{n:'energy drink',c:110},
-  {n:'sports drink',c:80},{n:'water',c:0},
-  {n:'ice cream (cup)',c:270},{n:'cookie',c:150},{n:'brownie',c:220},
-  {n:'donut',c:250},{n:'cake (slice)',c:350},{n:'pie (slice)',c:300},
-  {n:'candy bar',c:250},{n:'chocolate (oz)',c:150},{n:'gummy bears (pack)',c:130},
-  {n:'muffin',c:350},{n:'scone',c:400},{n:'croissant',c:230},
-  {n:'cranberry juice (8oz)',c:120},{n:'cranberry dried (1/4 cup)',c:93},
-  {n:'raisins (1/4 cup)',c:108},{n:'trail mix (oz)',c:140},
-  {n:'protein bar',c:200},{n:'protein shake',c:160},
-  // Brand snacks & cookies
-  {n:'oreos (3)',c:160},{n:'oreo',c:53},{n:'chips ahoy (3)',c:160},
-  {n:'nutter butter (2)',c:130},{n:'girl scout thin mints (4)',c:160},
-  {n:'goldfish (55 pieces)',c:140},{n:'cheez-its (27)',c:150},
-  {n:'ritz crackers (5)',c:80},{n:'wheat thins (16)',c:140},
-  {n:'doritos (12)',c:140},{n:'lays chips (15)',c:160},{n:'pringles (16)',c:150},
-  {n:'cheetos (21)',c:160},{n:'fritos (32)',c:160},{n:'tostitos (7)',c:140},
-  {n:'takis (12)',c:140},{n:'sun chips (16)',c:140},
-  {n:'snickers',c:250},{n:'kit kat',c:210},{n:'reeses cups (2)',c:210},
-  {n:'m&ms (pack)',c:240},{n:'twix',c:250},{n:'milky way',c:240},
-  {n:'skittles (pack)',c:250},{n:'starburst (8)',c:160},
-  {n:'hershey bar',c:220},{n:'butterfinger',c:275},
-  {n:'pop tart',c:200},{n:'pop tarts (2)',c:400},
-  {n:'nature valley bar',c:190},{n:'kind bar',c:200},{n:'clif bar',c:250},
-  // Brand drinks
-  {n:'coca-cola (12oz)',c:140},{n:'pepsi (12oz)',c:150},{n:'dr pepper (12oz)',c:150},
-  {n:'mountain dew (12oz)',c:170},{n:'sprite (12oz)',c:140},
-  {n:'gatorade (20oz)',c:140},{n:'body armor (16oz)',c:120},
-  {n:'red bull',c:110},{n:'monster energy',c:210},
-  {n:'starbucks latte (grande)',c:190},{n:'starbucks frappuccino',c:380},
-  // Fast food
-  {n:'big mac',c:550},{n:'quarter pounder',c:520},{n:'mcchicken',c:400},
-  {n:'mcnuggets (10)',c:410},{n:'mcdonald fries (medium)',c:320},
-  {n:'mcdonald fries (large)',c:480},
-  {n:'whopper',c:660},{n:'whopper jr',c:310},
-  {n:'chick-fil-a sandwich',c:440},{n:'chick-fil-a nuggets (8)',c:250},
-  {n:'wendys baconator',c:940},{n:'wendys dave single',c:570},
-  {n:'subway 6 inch turkey',c:280},{n:'subway 6 inch italian',c:410},
-  {n:'taco bell taco',c:170},{n:'taco bell burrito supreme',c:370},
-  {n:'chipotle burrito',c:1000},{n:'chipotle bowl',c:665},
-  {n:'dominos slice (cheese)',c:210},{n:'papa johns slice',c:285},
-  // Breakfast
-  {n:'eggo waffle',c:95},{n:'jimmy dean sausage',c:170},
-  {n:'instant oatmeal packet',c:160},{n:'cheerios (cup)',c:100},
-  {n:'frosted flakes (cup)',c:140},{n:'lucky charms (cup)',c:140},
-  {n:'honey nut cheerios (cup)',c:140},
-  // Frozen / prepared
-  {n:'hot pocket',c:300},{n:'totinos pizza rolls (6)',c:220},
-  {n:'lean cuisine',c:300},{n:'healthy choice',c:280},
-  {n:'ramen noodles (pack)',c:380},{n:'cup noodles',c:290},
-  {n:'frozen pizza (digiorno slice)',c:310},
-];
-
 function getStore() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultStore();
     const data = JSON.parse(raw);
-    // Migrate old settings to new defaults
     const d = defaultStore().settings;
     if (!data.settings.targetWeekday && !data.settings.targetWeekend) {
       data.settings.targetWeekday = d.targetWeekday;
@@ -737,22 +535,18 @@ function getStore() {
     }
     if (!data.settings.tdee) data.settings.tdee = d.tdee;
     if (!data.settings.weeks) data.settings.weeks = d.weeks;
-    if (!data.myFoods) data.myFoods = [];
     return data;
   } catch { return defaultStore(); }
 }
 
 function defaultStore() {
   return {
-    settings: { tdee: 2650, targetWeekday: 1250, targetWeekend: 1750, startWeight: null, goalWeight: null, startDate: todayStr(), weeks: 12 },
-    days: {},
-    myFoods: []
+    settings: { tdee: 2650, targetWeekday: 1250, targetWeekend: 1750, goalWeight: null, startDate: todayStr(), weeks: 12 },
+    days: {}
   };
 }
 
-function saveStore(store) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-}
+function saveStore(store) { localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); }
 
 function todayStr() {
   const d = new Date();
@@ -788,18 +582,15 @@ function evalCalExpr(expr) {
   try {
     const cleaned = expr.replace(/[^0-9+\-*/().]/g, '');
     if (!cleaned) return 0;
-    const result = Function('"use strict"; return (' + cleaned + ')')();
-    return Math.round(result);
+    return Math.round(Function('"use strict"; return (' + cleaned + ')')());
   } catch { return 0; }
 }
 
-function dayTotal(day) {
-  return day.foods.reduce((sum, f) => sum + (f.cal || 0), 0);
-}
+function dayTotal(day) { return day.foods.reduce((sum, f) => sum + (f.cal || 0), 0); }
 
 function getTargetForDate(dateStr) {
   const d = parseDate(dateStr);
-  const dow = d.getDay(); // 0=Sun, 6=Sat
+  const dow = d.getDay();
   const isWeekend = (dow === 0 || dow === 6);
   return isWeekend ? (store.settings.targetWeekend || 1750) : (store.settings.targetWeekday || 1250);
 }
@@ -807,23 +598,44 @@ function getTargetForDate(dateStr) {
 function getEffectiveCals(dateStr) {
   const day = store.days[dateStr];
   if (day && day.foods.length > 0) return dayTotal(day);
-  // Today: return 0 if nothing entered yet (still in progress)
   if (dateStr === todayStr()) return 0;
-  // Past with no entry: penalty
   if (dateStr < todayStr()) return 6666;
-  // Future: use target
   return getTargetForDate(dateStr);
 }
 
-function getProjectEndDate() {
-  const start = store.settings.startDate || todayStr();
-  const weeks = store.settings.weeks || 12;
-  return addDays(start, weeks * 7);
+// Display range helpers — ONLY for graph/calendar views
+function getDisplayStartDate() { return store.settings.startDate || todayStr(); }
+function getDisplayEndDate() {
+  return addDays(getDisplayStartDate(), (store.settings.weeks || 12) * 7);
+}
+function getDisplayDateRange() {
+  const dates = [];
+  let cur = getDisplayStartDate();
+  const end = getDisplayEndDate();
+  while (cur <= end) { dates.push(cur); cur = addDays(cur, 1); }
+  return dates;
 }
 
-// Shared weight calculation — used by both calendar and chart.
-// Uses PREVIOUS day's calories to calculate today's morning weight.
-function buildWeightMap(dates, tdee, today) {
+// Build weight map from ALL stored data (independent of display range)
+function buildFullWeightMap() {
+  const allStoredDates = Object.keys(store.days).sort();
+  const today = todayStr();
+  const displayEnd = getDisplayEndDate();
+  const tdee = store.settings.tdee;
+
+  // Earliest: first stored day
+  // Latest: whichever is later — display end or today
+  if (allStoredDates.length === 0) return {};
+  let earliest = allStoredDates[0];
+  let latest = displayEnd > today ? displayEnd : today;
+  // Also include the last stored date if it's beyond latest
+  const lastStored = allStoredDates[allStoredDates.length - 1];
+  if (lastStored > latest) latest = lastStored;
+
+  const dates = [];
+  let cur = earliest;
+  while (cur <= latest) { dates.push(cur); cur = addDays(cur, 1); }
+
   const weightMap = {};
   let currentWeight = null;
   let prevEaten = null;
@@ -832,27 +644,22 @@ function buildWeightMap(dates, tdee, today) {
     const day = store.days[d];
     const isFuture = d > today;
 
-    // If there's an actual weigh-in, use it
     if (day && day.weight) {
       currentWeight = day.weight;
       weightMap[d] = { w: currentWeight, type: 'actual' };
     } else if (currentWeight !== null && prevEaten !== null) {
-      // Today's morning weight = yesterday's weight adjusted by yesterday's eating
       const deficit = tdee - prevEaten;
       currentWeight -= deficit / 3500;
       weightMap[d] = { w: currentWeight, type: isFuture ? 'projected' : 'calculated' };
     }
 
-    // Track what was eaten today (becomes "yesterday" for the next iteration)
     if (isFuture) {
       prevEaten = getTargetForDate(d);
     } else if (day && day.foods.length > 0) {
       prevEaten = dayTotal(day);
     } else if (d === today) {
-      // Today in progress — use target as estimate
       prevEaten = getTargetForDate(d);
     } else {
-      // Past day with no entry — penalty
       prevEaten = 6666;
     }
   });
@@ -876,7 +683,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.add('active');
     document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
     if (btn.dataset.tab === 'history') renderHistory();
-    if (btn.dataset.tab === 'myfoods') renderMyFoods();
     if (btn.dataset.tab === 'graph') renderGraphs();
     if (btn.dataset.tab === 'calendar') renderCalendar();
     if (btn.dataset.tab === 'longterm') renderLongTerm();
@@ -897,12 +703,10 @@ function renderDay() {
   const d = parseDate(currentDate);
   const isWeekend = (d.getDay() === 0 || d.getDay() === 6);
 
-  // Date label
   const label = document.getElementById('current-date-label');
-  label.textContent = isToday ? 'Today — ' + formatDate(currentDate) : formatDate(currentDate);
+  label.textContent = isToday ? 'Today \u2014 ' + formatDate(currentDate) : formatDate(currentDate);
   label.classList.toggle('today-highlight', isToday);
 
-  // Summary
   document.getElementById('day-eaten').textContent = total.toLocaleString();
   const remEl = document.getElementById('day-remaining');
   if (remaining >= 0) {
@@ -914,13 +718,11 @@ function renderDay() {
   }
   document.getElementById('day-target-label').textContent = 'of ' + target.toLocaleString() + (isWeekend ? ' (wknd)' : ' (wkday)');
 
-  // Bar
   const bar = document.getElementById('day-bar');
   const pct = target > 0 ? Math.min((total / target) * 100, 100) : 0;
   bar.style.width = pct + '%';
   bar.classList.toggle('over', total > target);
 
-  // Food list
   const listEl = document.getElementById('food-list');
   listEl.innerHTML = '';
   day.foods.forEach((f, i) => {
@@ -935,7 +737,6 @@ function renderDay() {
     listEl.appendChild(div);
   });
 
-  // Edit handlers (only if not submitted)
   if (!day.submitted) {
     listEl.querySelectorAll('.food-name').forEach(el => {
       el.style.cursor = 'pointer';
@@ -944,8 +745,7 @@ function renderDay() {
         const newName = prompt('Edit name:', day.foods[idx].name);
         if (newName !== null && newName.trim()) {
           day.foods[idx].name = newName.trim();
-          saveStore(store);
-          renderDay();
+          saveStore(store); renderDay();
         }
       });
     });
@@ -959,72 +759,45 @@ function renderDay() {
           if (val > 0) {
             day.foods[idx].cal = val;
             day.foods[idx].expr = newCal;
-            saveStore(store);
-            renderDay();
+            saveStore(store); renderDay();
           }
         }
       });
     });
   }
 
-  // Delete handlers
   listEl.querySelectorAll('.delete-food').forEach(btn => {
     btn.addEventListener('click', () => {
       day.foods.splice(parseInt(btn.dataset.idx), 1);
-      saveStore(store);
-      renderDay();
+      saveStore(store); renderDay();
     });
   });
 
-  // Weight
-  document.getElementById('day-weight').value = day.weight || '';
-  
-  // Drink toggle
   const drinkBtn = document.getElementById('drink-toggle');
   const drank = day.drinks === true;
   drinkBtn.textContent = drank ? 'Yes' : 'No';
   drinkBtn.style.background = drank ? 'var(--accent)' : 'var(--surface2)';
   drinkBtn.style.color = drank ? 'white' : 'var(--text-dim)';
-  drinkBtn.style.borderColor = drank ? 'var(--accent)' : 'var(--text-faint)';
   drinkBtn.style.border = '1px solid ' + (drank ? 'var(--accent)' : 'var(--text-faint)');
 
-  // Status
   const statusEl = document.getElementById('day-status');
-  if (day.submitted) {
-    statusEl.textContent = '✓ Day submitted';
-    statusEl.className = 'day-status submitted';
-  } else if (day.foods.length > 0) {
-    statusEl.textContent = 'In progress';
-    statusEl.className = 'day-status';
-  } else {
-    statusEl.textContent = '';
-    statusEl.className = 'day-status';
-  }
+  if (day.submitted) { statusEl.textContent = '\u2713 Day submitted'; statusEl.className = 'day-status submitted'; }
+  else if (day.foods.length > 0) { statusEl.textContent = 'In progress'; statusEl.className = 'day-status'; }
+  else { statusEl.textContent = ''; statusEl.className = 'day-status'; }
 
-  // Buttons
   document.getElementById('submit-day-btn').style.display = day.submitted ? 'none' : 'block';
   document.getElementById('reopen-day-btn').style.display = day.submitted ? 'block' : 'none';
 
-  // Disable inputs if submitted
   const inputs = document.querySelectorAll('#panel-day .input-area input, #panel-day .input-area button');
   inputs.forEach(el => el.disabled = day.submitted);
 }
 
-// Date nav
-document.getElementById('prev-day').addEventListener('click', () => {
-  currentDate = addDays(currentDate, -1);
-  renderDay();
-});
-document.getElementById('next-day').addEventListener('click', () => {
-  currentDate = addDays(currentDate, 1);
-  renderDay();
-});
+document.getElementById('prev-day').addEventListener('click', () => { currentDate = addDays(currentDate, -1); renderDay(); });
+document.getElementById('next-day').addEventListener('click', () => { currentDate = addDays(currentDate, 1); renderDay(); });
 
-// Add food
 document.getElementById('add-food-btn').addEventListener('click', addFood);
-document.getElementById('food-cal').addEventListener('keydown', e => {
-  if (e.key === 'Enter') addFood();
-});
+document.getElementById('food-cal').addEventListener('keydown', e => { if (e.key === 'Enter') addFood(); });
+document.getElementById('food-name').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('food-cal').focus(); });
 
 function addFood() {
   const nameEl = document.getElementById('food-name');
@@ -1032,186 +805,75 @@ function addFood() {
   const name = nameEl.value.trim();
   const expr = calEl.value.trim();
   if (!name && !expr) return;
-
-  const cal = evalCalExpr(expr);
   const day = getDay(store, currentDate);
-  day.foods.push({ name: name || 'item', expr: expr, cal: cal });
-
-  // Save to My Foods (update if exists, add if new)
-  if (name && cal > 0) {
-    if (!store.myFoods) store.myFoods = [];
-    const existing = store.myFoods.findIndex(f => f.n.toLowerCase() === name.toLowerCase());
-    if (existing >= 0) {
-      store.myFoods[existing].c = cal; // update calorie value
-      store.myFoods[existing].used = Date.now();
-    } else {
-      store.myFoods.push({ n: name.toLowerCase(), c: cal, used: Date.now() });
-    }
-  }
-
+  day.foods.push({ name: name || 'item', expr: expr, cal: evalCalExpr(expr) });
   saveStore(store);
-  nameEl.value = '';
-  calEl.value = '';
-  nameEl.focus();
+  nameEl.value = ''; calEl.value = ''; nameEl.focus();
   renderDay();
-  hideAutocomplete();
 }
 
-// Submit / reopen
 document.getElementById('submit-day-btn').addEventListener('click', () => {
   const day = getDay(store, currentDate);
-  // Save weight from input
-  const wVal = parseFloat(document.getElementById('day-weight').value);
-  day.weight = isNaN(wVal) ? null : wVal;
   day.submitted = true;
-  saveStore(store);
-  renderDay();
-  showToast('Day submitted ✓');
+  saveStore(store); renderDay(); showToast('Day submitted \u2713');
 });
-
 document.getElementById('reopen-day-btn').addEventListener('click', () => {
   const day = getDay(store, currentDate);
   day.submitted = false;
-  saveStore(store);
-  renderDay();
-  showToast('Day reopened');
+  saveStore(store); renderDay(); showToast('Day reopened');
 });
-
-// Drink toggle
 document.getElementById('drink-toggle').addEventListener('click', () => {
   const day = getDay(store, currentDate);
   day.drinks = !day.drinks;
-  saveStore(store);
-  renderDay();
+  saveStore(store); renderDay();
 });
 
 // ============================================================
-// AUTOCOMPLETE
+// WEIGHT MODAL (opened from calendar)
 // ============================================================
-const foodNameEl = document.getElementById('food-name');
-const foodCalEl = document.getElementById('food-cal');
-const acList = document.getElementById('autocomplete-list');
-let acHighlight = -1;
-let apiTimeout = null;
+let weightModalDate = null;
 
-// Hide autocomplete when cal field gets focus
-foodCalEl.addEventListener('focus', () => hideAutocomplete());
-foodCalEl.addEventListener('touchstart', () => hideAutocomplete());
-foodCalEl.addEventListener('click', () => hideAutocomplete());
-foodCalEl.addEventListener('input', () => hideAutocomplete());
+function openWeightModal(dateStr) {
+  weightModalDate = dateStr;
+  const day = store.days[dateStr];
+  const hasWeight = day && day.weight;
+  document.getElementById('weight-modal-date').textContent = formatDate(dateStr);
+  document.getElementById('weight-modal-input').value = hasWeight ? day.weight : '';
+  document.getElementById('weight-modal-clear').style.display = hasWeight ? 'block' : 'none';
+  document.getElementById('weight-modal').classList.add('show');
+  setTimeout(() => document.getElementById('weight-modal-input').focus(), 100);
+}
 
-foodNameEl.addEventListener('input', () => {
-  const q = foodNameEl.value.trim().toLowerCase();
-  if (q.length < 2) { hideAutocomplete(); return; }
+function closeWeightModal() {
+  document.getElementById('weight-modal').classList.remove('show');
+  weightModalDate = null;
+}
 
-  // My Foods first (sorted by most recently used)
-  const myFoods = (store.myFoods || [])
-    .filter(f => f.n.includes(q))
-    .sort((a, b) => (b.used || 0) - (a.used || 0))
-    .slice(0, 5)
-    .map(f => ({ name: f.n, cal: f.c, source: 'mine' }));
-
-  // Then built-in list (excluding dupes from myFoods)
-  const myNames = new Set(myFoods.map(f => f.name));
-  const builtIn = COMMON_FOODS
-    .filter(f => f.n.includes(q) && !myNames.has(f.n))
-    .slice(0, 5)
-    .map(f => ({ name: f.n, cal: f.c, source: 'local' }));
-
-  showAutocomplete([...myFoods, ...builtIn]);
-
-  // API search (debounced)
-  clearTimeout(apiTimeout);
-  apiTimeout = setTimeout(() => searchAPI(q), 500);
+document.getElementById('weight-modal-save').addEventListener('click', () => {
+  if (!weightModalDate) return;
+  const val = parseFloat(document.getElementById('weight-modal-input').value);
+  const day = getDay(store, weightModalDate);
+  day.weight = isNaN(val) ? null : val;
+  saveStore(store); closeWeightModal(); renderCalendar();
+  showToast(isNaN(val) ? 'Weight cleared' : val + ' lbs saved');
 });
 
-foodNameEl.addEventListener('keydown', (e) => {
-  const items = acList.querySelectorAll('.autocomplete-item');
-  if (e.key === 'ArrowDown') {
-    e.preventDefault();
-    acHighlight = Math.min(acHighlight + 1, items.length - 1);
-    updateAcHighlight(items);
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault();
-    acHighlight = Math.max(acHighlight - 1, -1);
-    updateAcHighlight(items);
-  } else if (e.key === 'Enter' && acHighlight >= 0 && items[acHighlight]) {
-    e.preventDefault();
-    selectAcItem(items[acHighlight]);
-  } else if (e.key === 'Escape') {
-    hideAutocomplete();
-  } else if (e.key === 'Tab') {
-    hideAutocomplete();
-  }
+document.getElementById('weight-modal-clear').addEventListener('click', () => {
+  if (!weightModalDate) return;
+  const day = getDay(store, weightModalDate);
+  day.weight = null;
+  saveStore(store); closeWeightModal(); renderCalendar();
+  showToast('Weight cleared');
 });
 
-function showAutocomplete(items) {
-  if (items.length === 0) { hideAutocomplete(); return; }
-  acList.innerHTML = '';
-  acHighlight = -1;
-  items.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'autocomplete-item';
-    const tag = item.source === 'mine' ? ' <span style="color:var(--accent);font-size:10px;">★</span>' : '';
-    div.innerHTML = `<span>${item.name}${tag}</span><span class="ac-cal">${item.cal}</span>`;
-    div.dataset.name = item.name;
-    div.dataset.cal = item.cal;
-    div.addEventListener('click', () => selectAcItem(div));
-    acList.appendChild(div);
-  });
-  acList.classList.add('show');
-}
-
-function hideAutocomplete() {
-  acList.classList.remove('show');
-  acHighlight = -1;
-}
-
-function selectAcItem(el) {
-  foodNameEl.value = el.dataset.name;
-  document.getElementById('food-cal').value = el.dataset.cal;
-  hideAutocomplete();
-  document.getElementById('food-cal').focus();
-}
-
-function updateAcHighlight(items) {
-  items.forEach((el, i) => el.classList.toggle('highlighted', i === acHighlight));
-}
-
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.autocomplete-wrap')) hideAutocomplete();
+document.getElementById('weight-modal-cancel').addEventListener('click', closeWeightModal);
+document.getElementById('weight-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('weight-modal')) closeWeightModal();
 });
-
-async function searchAPI(query) {
-  try {
-    const resp = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&pageSize=8&api_key=HrYSRWBU5eKRW4rJa14tkaJBcWZ5n21Hw8JLya7t`);
-    if (!resp.ok) return;
-    const data = await resp.json();
-    if (data.foods && data.foods.length > 0) {
-      const apiResults = data.foods.slice(0, 5).map(item => {
-        const calNutrient = item.foodNutrients?.find(n => n.nutrientName === 'Energy' && n.unitName === 'KCAL');
-        const cal = calNutrient ? Math.round(calNutrient.value) : 0;
-        const name = item.description?.toLowerCase() || query;
-        // Truncate long USDA names
-        const shortName = name.length > 40 ? name.substring(0, 40) + '...' : name;
-        return { name: shortName, cal: cal, source: 'usda' };
-      }).filter(r => r.cal > 0);
-      // Merge with any existing local results
-      const current = Array.from(acList.querySelectorAll('.autocomplete-item')).map(el => el.dataset.name);
-      const newItems = apiResults.filter(r => !current.includes(r.name));
-      newItems.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'autocomplete-item';
-        div.innerHTML = `<span>${item.name} <span style="color:var(--text-faint);font-size:10px;">usda</span></span><span class="ac-cal">${item.cal}</span>`;
-        div.dataset.name = item.name;
-        div.dataset.cal = item.cal;
-        div.addEventListener('click', () => selectAcItem(div));
-        acList.appendChild(div);
-      });
-      if (newItems.length > 0) acList.classList.add('show');
-    }
-  } catch {}
-}
+document.getElementById('weight-modal-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('weight-modal-save').click();
+  if (e.key === 'Escape') closeWeightModal();
+});
 
 // ============================================================
 // HISTORY PANEL
@@ -1219,14 +881,8 @@ async function searchAPI(query) {
 function renderHistory() {
   const list = document.getElementById('history-list');
   const sortedDates = Object.keys(store.days).sort().reverse();
-  
-  if (sortedDates.length === 0) {
-    list.innerHTML = '<div class="no-data">No days logged yet</div>';
-    return;
-  }
-
+  if (sortedDates.length === 0) { list.innerHTML = '<div class="no-data">No days logged yet</div>'; return; }
   list.innerHTML = '';
-
   sortedDates.forEach(dateStr => {
     const day = store.days[dateStr];
     if (day.foods.length === 0 && !day.weight && !day.submitted) return;
@@ -1236,126 +892,21 @@ function renderHistory() {
     div.className = 'history-item';
     if (total > target && target > 0) div.classList.add('over-target');
     if (day.submitted) div.classList.add('submitted-item');
-    
     let details = [];
     if (day.weight) details.push(day.weight + ' lbs');
-    if (day.drinks === true) details.push('🍺');
-    const detailStr = details.length > 0 ? ' · ' + details.join(' · ') : '';
-
+    if (day.drinks === true) details.push('\uD83C\uDF7A');
+    const detailStr = details.length > 0 ? ' \u00B7 ' + details.join(' \u00B7 ') : '';
     div.innerHTML = `
       <div>
         <div class="h-date">${formatDate(dateStr)}</div>
-        <div class="h-status">${day.submitted ? '✓ submitted' : 'draft'}${detailStr}</div>
+        <div class="h-status">${day.submitted ? '\u2713 submitted' : 'draft'}${detailStr}</div>
       </div>
       <div class="h-cals">${total.toLocaleString()}</div>
     `;
-    div.addEventListener('click', () => {
-      currentDate = dateStr;
-      document.querySelector('[data-tab="day"]').click();
-    });
+    div.addEventListener('click', () => { currentDate = dateStr; document.querySelector('[data-tab="day"]').click(); });
     list.appendChild(div);
   });
 }
-
-// ============================================================
-// MY FOODS PANEL
-// ============================================================
-function renderMyFoods(filter) {
-  if (!store.myFoods) store.myFoods = [];
-  const list = document.getElementById('myfoods-list');
-  const empty = document.getElementById('myfoods-empty');
-  const q = (filter || document.getElementById('mf-search').value || '').trim().toLowerCase();
-
-  let foods = store.myFoods.slice();
-  if (q) {
-    foods = foods.filter(f => f.n.includes(q));
-  }
-  // Sort alphabetically
-  foods.sort((a, b) => a.n.localeCompare(b.n));
-
-  if (store.myFoods.length === 0) {
-    list.innerHTML = '';
-    empty.style.display = 'block';
-    return;
-  }
-  empty.style.display = 'none';
-
-  list.innerHTML = `<div class="mf-count">${foods.length} food${foods.length !== 1 ? 's' : ''}${q ? ' matching "' + q + '"' : ''}</div>`;
-
-  foods.forEach(f => {
-    const div = document.createElement('div');
-    div.className = 'mf-item';
-    div.innerHTML = `
-      <span class="mf-name" style="cursor:pointer;" title="Tap to add to today">${f.n}</span>
-      <span class="mf-cal">${f.c}</span>
-      <div class="mf-actions">
-        <button class="mf-btn mf-add-today" title="Add to today">+</button>
-        <button class="mf-btn mf-edit" title="Edit">✎</button>
-        <button class="mf-btn mf-del" title="Delete">&times;</button>
-      </div>
-    `;
-    // Tap name to add to today
-    div.querySelector('.mf-name').addEventListener('click', () => {
-      const day = getDay(store, currentDate);
-      day.foods.push({ name: f.n, expr: String(f.c), cal: f.c });
-      saveStore(store);
-      showToast(f.n + ' added to ' + formatDate(currentDate));
-    });
-    // + button to add to today
-    div.querySelector('.mf-add-today').addEventListener('click', () => {
-      const day = getDay(store, currentDate);
-      day.foods.push({ name: f.n, expr: String(f.c), cal: f.c });
-      saveStore(store);
-      showToast(f.n + ' added to ' + formatDate(currentDate));
-    });
-    // Delete
-    div.querySelector('.mf-del').addEventListener('click', () => {
-      if (confirm('Delete "' + f.n + '"?')) {
-        store.myFoods = store.myFoods.filter(x => x.n !== f.n);
-        saveStore(store);
-        renderMyFoods();
-      }
-    });
-    // Edit (name and calories)
-    div.querySelector('.mf-edit').addEventListener('click', () => {
-      const newName = prompt('Food name:', f.n);
-      if (newName === null) return;
-      const newCal = prompt('Calories:', f.c);
-      if (newCal === null) return;
-      const idx = store.myFoods.findIndex(x => x.n === f.n);
-      if (idx >= 0) {
-        if (newName.trim()) store.myFoods[idx].n = newName.trim().toLowerCase();
-        if (!isNaN(parseInt(newCal))) store.myFoods[idx].c = parseInt(newCal);
-        saveStore(store);
-        renderMyFoods();
-      }
-    });
-    list.appendChild(div);
-  });
-}
-
-// My Foods search
-document.getElementById('mf-search').addEventListener('input', () => renderMyFoods());
-
-// My Foods manual add
-document.getElementById('mf-add-btn').addEventListener('click', () => {
-  const name = document.getElementById('mf-name').value.trim().toLowerCase();
-  const cal = parseInt(document.getElementById('mf-cal').value);
-  if (!name || isNaN(cal)) return;
-  if (!store.myFoods) store.myFoods = [];
-  const existing = store.myFoods.findIndex(f => f.n === name);
-  if (existing >= 0) {
-    store.myFoods[existing].c = cal;
-    store.myFoods[existing].used = Date.now();
-  } else {
-    store.myFoods.push({ n: name, c: cal, used: Date.now() });
-  }
-  saveStore(store);
-  document.getElementById('mf-name').value = '';
-  document.getElementById('mf-cal').value = '';
-  renderMyFoods();
-  showToast('Food saved');
-});
 
 // ============================================================
 // CALENDAR
@@ -1363,70 +914,47 @@ document.getElementById('mf-add-btn').addEventListener('click', () => {
 function renderCalendar() {
   const container = document.getElementById('calendar-grid');
   container.innerHTML = '';
-
-  const startDate = store.settings.startDate || todayStr();
-  const endDate = getProjectEndDate();
+  const startDate = getDisplayStartDate();
+  const endDate = getDisplayEndDate();
   const today = todayStr();
   const showProjection = !store.settings.hideProjection;
   const tdee = store.settings.tdee;
-  const allDatesInRange = [];
-  let cur2 = startDate;
-  while (cur2 <= endDate) { allDatesInRange.push(cur2); cur2 = addDays(cur2, 1); }
-  const weightMap = buildWeightMap(allDatesInRange, tdee, today);
 
-  // Figure out which months we need
+  // Weight map from FULL history
+  const weightMap = buildFullWeightMap();
+
   const startD = parseDate(startDate);
   const endD = parseDate(endDate);
   const months = [];
   let cur = new Date(startD.getFullYear(), startD.getMonth(), 1);
-  while (cur <= endD) {
-    months.push({ year: cur.getFullYear(), month: cur.getMonth() });
-    cur.setMonth(cur.getMonth() + 1);
-  }
+  while (cur <= endD) { months.push({ year: cur.getFullYear(), month: cur.getMonth() }); cur.setMonth(cur.getMonth() + 1); }
 
   const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const dowLabels = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 
   months.forEach(m => {
-    // Month header
     const header = document.createElement('div');
     header.className = 'cal-month-header';
     header.textContent = monthNames[m.month] + ' ' + m.year;
     container.appendChild(header);
 
-    // Grid
     const grid = document.createElement('div');
     grid.className = 'cal-grid';
+    dowLabels.forEach(d => { const dow = document.createElement('div'); dow.className = 'cal-dow'; dow.textContent = d; grid.appendChild(dow); });
 
-    // Day of week headers
-    dowLabels.forEach(d => {
-      const dow = document.createElement('div');
-      dow.className = 'cal-dow';
-      dow.textContent = d;
-      grid.appendChild(dow);
-    });
-
-    // First day offset
     const firstDay = new Date(m.year, m.month, 1).getDay();
-    for (let i = 0; i < firstDay; i++) {
-      const empty = document.createElement('div');
-      empty.className = 'cal-cell empty';
-      grid.appendChild(empty);
-    }
+    for (let i = 0; i < firstDay; i++) { const empty = document.createElement('div'); empty.className = 'cal-cell empty'; grid.appendChild(empty); }
 
-    // Days in month
     const daysInMonth = new Date(m.year, m.month + 1, 0).getDate();
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${m.year}-${String(m.month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       const cell = document.createElement('div');
       cell.className = 'cal-cell';
 
-      // Check if in range
       if (dateStr < startDate || dateStr > endDate) {
         cell.className = 'cal-cell empty';
         cell.innerHTML = `<span class="cal-day-num" style="opacity:0.2">${d}</span>`;
-        grid.appendChild(cell);
-        continue;
+        grid.appendChild(cell); continue;
       }
 
       const day = store.days[dateStr];
@@ -1438,51 +966,32 @@ function renderCalendar() {
 
       if (isFuture) {
         cell.classList.add('future');
-        let futureHtml = `<span class="cal-day-num">${d}</span>`;
-        if (showProjection && weightMap[dateStr]) {
-          futureHtml += `<span class="cal-weight projected">${weightMap[dateStr].w.toFixed(1)}</span>`;
-        }
-        cell.innerHTML = futureHtml;
+        let html = `<span class="cal-day-num">${d}</span>`;
+        if (showProjection && weightMap[dateStr]) html += `<span class="cal-weight projected">${weightMap[dateStr].w.toFixed(1)}</span>`;
+        cell.innerHTML = html;
       } else {
-        // Past or today
         const cals = getEffectiveCals(dateStr);
         const isPenalty = (!day || day.foods.length === 0) && cals === 6666;
         const threeColor = store.settings.colorMode === 'three';
 
-        if (isPenalty) {
-          cell.classList.add('penalty');
-        } else if (isToday && (!day || day.foods.length === 0)) {
-          cell.classList.add('future'); // show as neutral/in-progress
-        } else if (cals <= target) {
-          cell.classList.add('good');
-        } else if (threeColor && cals <= tdee) {
-          cell.classList.add('warn');
-        } else {
-          cell.classList.add('bad');
-        }
+        if (isPenalty) cell.classList.add('penalty');
+        else if (isToday && (!day || day.foods.length === 0)) cell.classList.add('future');
+        else if (cals <= target) cell.classList.add('good');
+        else if (threeColor && cals <= tdee) cell.classList.add('warn');
+        else cell.classList.add('bad');
 
         cell.innerHTML = `<span class="cal-day-num">${d}</span><span class="cal-day-cals">${cals >= 6666 ? '!' : (isToday && cals === 0 ? '...' : cals)}</span>`;
-
-        // Drink indicator
-        if (day && day.drinks === true) {
-          cell.innerHTML += '<span class="cal-drink">🍺</span>';
-        }
-        // Weight label
+        if (day && day.drinks === true) cell.innerHTML += '<span class="cal-drink">\uD83C\uDF7A</span>';
         if (weightMap[dateStr]) {
           const wInfo = weightMap[dateStr];
           cell.innerHTML += `<span class="cal-weight ${wInfo.type}">${wInfo.w.toFixed(1)}</span>`;
         }
       }
 
-      // Click to navigate
-      cell.addEventListener('click', () => {
-        currentDate = dateStr;
-        document.querySelector('[data-tab="day"]').click();
-      });
-
+      // Tap opens weight modal
+      cell.addEventListener('click', () => openWeightModal(dateStr));
       grid.appendChild(cell);
     }
-
     container.appendChild(grid);
   });
 }
@@ -1491,37 +1000,18 @@ function renderCalendar() {
 // GRAPHS
 // ============================================================
 function renderGraphs() {
-  const start = store.settings.startDate || todayStr();
-  const end = getProjectEndDate();
-  const label = document.getElementById('graph-range-label');
-  label.textContent = formatDate(start) + ' → ' + formatDate(end) + ' (' + (store.settings.weeks || 12) + ' weeks)';
-
-  // Update toggle button text
-  const toggleBtn = document.getElementById('toggle-projection');
-  toggleBtn.textContent = store.settings.hideProjection ? 'Projection: Off' : 'Projection: On';
-
+  const start = getDisplayStartDate();
+  const end = getDisplayEndDate();
+  document.getElementById('graph-range-label').textContent = formatDate(start) + ' \u2192 ' + formatDate(end) + ' (' + (store.settings.weeks || 12) + ' weeks)';
+  document.getElementById('toggle-projection').textContent = store.settings.hideProjection ? 'Projection: Off' : 'Projection: On';
   drawWeightChart();
   drawCalorieChart();
 }
 
-// Projection toggle
 document.getElementById('toggle-projection').addEventListener('click', () => {
   store.settings.hideProjection = !store.settings.hideProjection;
-  saveStore(store);
-  renderGraphs();
+  saveStore(store); renderGraphs();
 });
-
-function getDateRange() {
-  const s = store.settings.startDate || todayStr();
-  const e = getProjectEndDate();
-  const dates = [];
-  let cur = s;
-  while (cur <= e) {
-    dates.push(cur);
-    cur = addDays(cur, 1);
-  }
-  return dates;
-}
 
 function drawWeightChart() {
   const canvas = document.getElementById('weight-chart');
@@ -1530,33 +1020,25 @@ function drawWeightChart() {
   canvas.width = canvas.offsetWidth * dpr;
   canvas.height = 250 * dpr;
   ctx.scale(dpr, dpr);
-  const W = canvas.offsetWidth;
-  const H = 250;
+  const W = canvas.offsetWidth, H = 250;
   ctx.clearRect(0, 0, W, H);
 
-  const dates = getDateRange();
+  const dates = getDisplayDateRange();
   if (dates.length < 2) return;
 
-  const settings = store.settings;
-  const tdee = settings.tdee;
-
-  // Build calculated weight for every day using shared function
-  const weightMap = buildWeightMap(dates, tdee, todayStr());
+  // Full weight map, then slice to display range
+  const weightMap = buildFullWeightMap();
   const calcWeights = [];
   dates.forEach((d, i) => {
-    if (weightMap[d]) {
-      calcWeights.push({ idx: i, w: weightMap[d].w, date: d, isActual: weightMap[d].type === 'actual' });
-    }
+    if (weightMap[d]) calcWeights.push({ idx: i, w: weightMap[d].w, date: d, isActual: weightMap[d].type === 'actual' });
   });
 
   const today = todayStr();
   const pastWeights = calcWeights.filter(p => p.date <= today);
   const futureWeights = calcWeights.filter(p => p.date > today);
-
-  // Check projection toggle
   const showProjection = !store.settings.hideProjection;
+  const settings = store.settings;
 
-  // Find range
   let allW = pastWeights.map(p => p.w);
   if (showProjection) allW = allW.concat(futureWeights.map(p => p.w));
   if (settings.goalWeight) allW.push(settings.goalWeight);
@@ -1566,24 +1048,18 @@ function drawWeightChart() {
   if (maxW - minW < 5) { minW -= 3; maxW += 3; }
 
   const pad = { t: 20, b: 30, l: 45, r: 15 };
-  const gW = W - pad.l - pad.r;
-  const gH = H - pad.t - pad.b;
-
+  const gW = W - pad.l - pad.r, gH = H - pad.t - pad.b;
   const xScale = (i) => pad.l + (i / (dates.length - 1)) * gW;
   const yScale = (w) => pad.t + (1 - (w - minW) / (maxW - minW)) * gH;
 
-  // Grid lines (snap to 10s)
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-  ctx.lineWidth = 1;
-  const step = 10;
-  for (let w = Math.ceil(minW / step) * step; w <= maxW; w += step) {
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+  for (let w = Math.ceil(minW / 10) * 10; w <= maxW; w += 10) {
     const y = yScale(w);
     ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
     ctx.fillStyle = '#555e70'; ctx.font = '11px JetBrains Mono'; ctx.textAlign = 'right';
     ctx.fillText(w + '', pad.l - 6, y + 4);
   }
 
-  // X labels
   ctx.fillStyle = '#555e70'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'center';
   const labelEvery = Math.max(1, Math.floor(dates.length / 6));
   dates.forEach((d, i) => {
@@ -1593,62 +1069,36 @@ function drawWeightChart() {
     }
   });
 
-  // Goal weight line
   if (settings.goalWeight) {
     const gy = yScale(settings.goalWeight);
-    ctx.strokeStyle = 'rgba(240,192,64,0.3)';
-    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = 'rgba(240,192,64,0.3)'; ctx.setLineDash([4, 4]);
     ctx.beginPath(); ctx.moveTo(pad.l, gy); ctx.lineTo(W - pad.r, gy); ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle = '#f0c040'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'left';
     ctx.fillText('goal ' + settings.goalWeight, pad.l + 4, gy - 6);
   }
 
-  // Future projected line (dashed green, no dots)
   if (showProjection && futureWeights.length > 0) {
-    ctx.strokeStyle = '#4ecca3';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([6, 3]);
+    ctx.strokeStyle = '#4ecca3'; ctx.lineWidth = 2; ctx.setLineDash([6, 3]);
     ctx.beginPath();
-    // Connect from last past point
-    if (pastWeights.length > 0) {
-      const lp = pastWeights[pastWeights.length - 1];
-      ctx.moveTo(xScale(lp.idx), yScale(lp.w));
-    }
-    futureWeights.forEach(p => {
-      ctx.lineTo(xScale(p.idx), yScale(p.w));
-    });
-    ctx.stroke();
-    ctx.setLineDash([]);
+    if (pastWeights.length > 0) { const lp = pastWeights[pastWeights.length - 1]; ctx.moveTo(xScale(lp.idx), yScale(lp.w)); }
+    futureWeights.forEach(p => ctx.lineTo(xScale(p.idx), yScale(p.w)));
+    ctx.stroke(); ctx.setLineDash([]);
   }
 
-  // Past weight line (solid red)
   if (pastWeights.length > 0) {
-    ctx.strokeStyle = '#e94560';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    pastWeights.forEach((p, i) => {
-      const x = xScale(p.idx), y = yScale(p.w);
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    });
+    ctx.strokeStyle = '#e94560'; ctx.lineWidth = 2; ctx.beginPath();
+    pastWeights.forEach((p, i) => { const x = xScale(p.idx), y = yScale(p.w); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
     ctx.stroke();
-
-    // Dots on past: yellow square on Mondays, red dot other days
     pastWeights.forEach(p => {
       const x = xScale(p.idx), y = yScale(p.w);
       const dow = parseDate(p.date).getDay();
       if (dow === 1) {
         const sz = 5;
-        ctx.fillStyle = '#f0c040';
-        ctx.fillRect(x - sz, y - sz, sz * 2, sz * 2);
-        ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 1;
-        ctx.strokeRect(x - sz, y - sz, sz * 2, sz * 2);
-        // Monday weight label
-        ctx.fillStyle = '#f0c040';
-        ctx.font = '10px JetBrains Mono';
-        ctx.textAlign = 'left';
-        const labelY = y - 10 < pad.t + 10 ? y + 16 : y - 10;
-        ctx.fillText(p.w.toFixed(1), x + 8, labelY);
+        ctx.fillStyle = '#f0c040'; ctx.fillRect(x - sz, y - sz, sz * 2, sz * 2);
+        ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 1; ctx.strokeRect(x - sz, y - sz, sz * 2, sz * 2);
+        ctx.fillStyle = '#f0c040'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'left';
+        ctx.fillText(p.w.toFixed(1), x + 8, y - 10 < pad.t + 10 ? y + 16 : y - 10);
       } else {
         ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2);
         ctx.fillStyle = '#e94560'; ctx.fill();
@@ -1665,45 +1115,35 @@ function drawCalorieChart() {
   canvas.width = canvas.offsetWidth * dpr;
   canvas.height = 200 * dpr;
   ctx.scale(dpr, dpr);
-  const W = canvas.offsetWidth;
-  const H = 200;
+  const W = canvas.offsetWidth, H = 200;
   ctx.clearRect(0, 0, W, H);
 
-  const dates = getDateRange();
+  const dates = getDisplayDateRange();
   if (dates.length < 2) return;
+  const today = todayStr();
 
-  const cals = dates.map(d => {
-    if (d <= todayStr()) return getEffectiveCals(d);
-    return 0; // don't show future
-  });
+  const cals = dates.map(d => d <= today ? getEffectiveCals(d) : 0);
   const targets = dates.map(d => getTargetForDate(d));
-
   const maxC = Math.max(...targets.map(t => t * 1.3), ...cals.filter(c => c < 6666), 500);
   const pad = { t: 15, b: 30, l: 45, r: 15 };
-  const gW = W - pad.l - pad.r;
-  const gH = H - pad.t - pad.b;
-
+  const gW = W - pad.l - pad.r, gH = H - pad.t - pad.b;
   const barW = Math.max(2, (gW / dates.length) - 2);
 
-  // Grid
   ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-  const step = Math.max(100, Math.round(maxC / 4 / 100) * 100);
-  for (let c = 0; c <= maxC; c += step) {
+  const step2 = Math.max(100, Math.round(maxC / 4 / 100) * 100);
+  for (let c = 0; c <= maxC; c += step2) {
     const y = pad.t + (1 - c / maxC) * gH;
     ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
     ctx.fillStyle = '#555e70'; ctx.font = '11px JetBrains Mono'; ctx.textAlign = 'right';
     ctx.fillText(c + '', pad.l - 6, y + 4);
   }
 
-  // Target lines (draw weekday and weekend lines)
   const wdTarget = store.settings.targetWeekday || 1500;
   const weTarget = store.settings.targetWeekend || 1800;
   [wdTarget, weTarget].forEach((t, ti) => {
     if (t > 0 && t <= maxC) {
       const ty = pad.t + (1 - t / maxC) * gH;
-      ctx.strokeStyle = ti === 0 ? '#f0c040' : '#f0a020';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = ti === 0 ? '#f0c040' : '#f0a020'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
       ctx.beginPath(); ctx.moveTo(pad.l, ty); ctx.lineTo(W - pad.r, ty); ctx.stroke();
       ctx.setLineDash([]);
       ctx.fillStyle = ctx.strokeStyle; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'right';
@@ -1713,47 +1153,29 @@ function drawCalorieChart() {
 
   const threeColor = store.settings.colorMode === 'three';
   const tdeeVal = store.settings.tdee;
-  const today = todayStr();
 
-  // Bars
   dates.forEach((d, i) => {
     const c = cals[i];
     if (c === 0 && d !== today) return;
     const target = targets[i];
-    const displayC = c === 0 ? 0 : c;
-    const cappedC = Math.min(displayC, maxC);
+    const cappedC = Math.min(c === 0 ? 0 : c, maxC);
     const x = pad.l + (i / dates.length) * gW + 1;
-    const h = cappedC > 0 ? (cappedC / maxC) * gH : 4; // minimum height for today if 0
+    const h = cappedC > 0 ? (cappedC / maxC) * gH : 4;
     const y = pad.t + gH - h;
 
-    // Fill color
-    if (c >= 6666) {
-      ctx.fillStyle = 'rgba(155,89,182,0.7)';
-    } else if (c <= target) {
-      ctx.fillStyle = 'rgba(78,204,163,0.7)'; // green
-    } else if (threeColor && c <= tdeeVal) {
-      ctx.fillStyle = 'rgba(240,192,64,0.7)'; // yellow
-    } else if (c > target) {
-      ctx.fillStyle = 'rgba(233,69,96,0.7)'; // red
-    } else {
-      ctx.fillStyle = 'rgba(78,204,163,0.3)'; // empty today
-    }
-    ctx.beginPath();
-    ctx.roundRect(x, y, barW, h, [3, 3, 0, 0]);
-    ctx.fill();
+    if (c >= 6666) ctx.fillStyle = 'rgba(155,89,182,0.7)';
+    else if (c <= target) ctx.fillStyle = 'rgba(78,204,163,0.7)';
+    else if (threeColor && c <= tdeeVal) ctx.fillStyle = 'rgba(240,192,64,0.7)';
+    else if (c > target) ctx.fillStyle = 'rgba(233,69,96,0.7)';
+    else ctx.fillStyle = 'rgba(78,204,163,0.3)';
+    ctx.beginPath(); ctx.roundRect(x, y, barW, h, [3, 3, 0, 0]); ctx.fill();
 
-    // Today outline — yellow
     if (d === today) {
-      ctx.strokeStyle = '#f0c040';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([]);
-      ctx.beginPath();
-      ctx.roundRect(x - 1, y - 1, barW + 2, h + 2, [4, 4, 0, 0]);
-      ctx.stroke();
+      ctx.strokeStyle = '#f0c040'; ctx.lineWidth = 2; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.roundRect(x - 1, y - 1, barW + 2, h + 2, [4, 4, 0, 0]); ctx.stroke();
     }
   });
 
-  // X labels
   ctx.fillStyle = '#555e70'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'center';
   const labelEvery = Math.max(1, Math.floor(dates.length / 6));
   dates.forEach((d, i) => {
@@ -1788,10 +1210,7 @@ document.getElementById('save-settings-btn').addEventListener('click', () => {
   store.settings.startDate = document.getElementById('set-start-date').value || todayStr();
   store.settings.weeks = parseInt(document.getElementById('set-weeks').value) || 12;
   store.settings.colorMode = document.getElementById('set-color-mode').value || 'two';
-  saveStore(store);
-  showToast('Settings saved');
-  renderDay();
-  updateWeeklyProjection();
+  saveStore(store); showToast('Settings saved'); renderDay(); updateWeeklyProjection();
 });
 
 function updateWeeklyProjection() {
@@ -1803,96 +1222,68 @@ function updateWeeklyProjection() {
   const weeklyLbs = weeklyDeficit / 3500;
   const sign = weeklyLbs >= 0 ? '-' : '+';
   const abs = Math.abs(weeklyLbs).toFixed(2);
-  
-  let msg = `Weekly: 5×${wd} + 2×${we} = ${wd*5 + we*2} cal/wk`;
+  let msg = `Weekly: 5\u00D7${wd} + 2\u00D7${we} = ${wd*5 + we*2} cal/wk`;
   msg += `<br>Deficit: ${weeklyDeficit.toLocaleString()} cal/wk`;
   msg += `<br><span style="color:${weeklyLbs >= 0 ? 'var(--green)' : 'var(--accent)'}; font-size:16px; font-weight:700;">${sign}${abs} lbs/week</span>`;
-  
   if (store.settings.goalWeight && weeklyLbs > 0) {
-    // Find last weigh-in
     const allDates = Object.keys(store.days).sort();
     let lastW = null;
-    for (let i = allDates.length - 1; i >= 0; i--) {
-      if (store.days[allDates[i]].weight) { lastW = store.days[allDates[i]].weight; break; }
-    }
+    for (let i = allDates.length - 1; i >= 0; i--) { if (store.days[allDates[i]].weight) { lastW = store.days[allDates[i]].weight; break; } }
     if (lastW) {
       const toLose = lastW - store.settings.goalWeight;
-      if (toLose > 0) {
-        const weeks = toLose / weeklyLbs;
-        msg += `<br><span style="font-size:11px;">~${Math.round(weeks)} weeks to goal (from ${lastW} lbs)</span>`;
-      }
+      if (toLose > 0) { const weeks = toLose / weeklyLbs; msg += `<br><span style="font-size:11px;">~${Math.round(weeks)} weeks to goal (from ${lastW} lbs)</span>`; }
     }
   }
   el.innerHTML = msg;
 }
 
-// Live-update projection when inputs change
 ['set-tdee', 'set-target-weekday', 'set-target-weekend'].forEach(id => {
   document.getElementById(id).addEventListener('input', () => {
     const tdee = parseInt(document.getElementById('set-tdee').value) || store.settings.tdee;
     const wd = parseInt(document.getElementById('set-target-weekday').value) || 1500;
     const we = parseInt(document.getElementById('set-target-weekend').value) || 1800;
-    // Temporarily update for preview
     const el = document.getElementById('weekly-projection');
     const weeklyDeficit = (tdee - wd) * 5 + (tdee - we) * 2;
     const weeklyLbs = weeklyDeficit / 3500;
     const sign = weeklyLbs >= 0 ? '-' : '+';
     const abs = Math.abs(weeklyLbs).toFixed(2);
-    let msg = `Weekly: 5×${wd} + 2×${we} = ${wd*5 + we*2} cal/wk`;
+    let msg = `Weekly: 5\u00D7${wd} + 2\u00D7${we} = ${wd*5 + we*2} cal/wk`;
     msg += `<br>Deficit: ${weeklyDeficit.toLocaleString()} cal/wk`;
     msg += `<br><span style="color:${weeklyLbs >= 0 ? 'var(--green)' : 'var(--accent)'}; font-size:16px; font-weight:700;">${sign}${abs} lbs/week</span>`;
     el.innerHTML = msg;
   });
 });
 
-// Export (days only — settings and myFoods stay in the app)
+// Export / Import / Clear
 document.getElementById('export-btn').addEventListener('click', () => {
-  const exportData = { days: store.days };
-  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ days: store.days }, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'caltrack_export.json'; a.click();
-  URL.revokeObjectURL(url);
-  showToast('Data exported');
+  const a = document.createElement('a'); a.href = url; a.download = 'caltrack_export.json'; a.click();
+  URL.revokeObjectURL(url); showToast('Data exported');
 });
 
-// Import (merges days only — settings and myFoods are untouched)
-document.getElementById('import-btn').addEventListener('click', () => {
-  document.getElementById('import-file').click();
-});
+document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file').click());
 document.getElementById('import-file').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
     try {
       const imported = JSON.parse(reader.result);
-      if (imported.days) {
-        Object.assign(store.days, imported.days);
-        saveStore(store);
-        showToast('Day data imported');
-        renderDay();
-      } else {
-        showToast('Invalid file — no days found');
-      }
+      if (imported.days) { Object.assign(store.days, imported.days); saveStore(store); showToast('Day data imported'); renderDay(); }
+      else showToast('Invalid file \u2014 no days found');
     } catch { showToast('Error reading file'); }
   };
   reader.readAsText(file);
 });
 
-// Clear
 document.getElementById('clear-btn').addEventListener('click', () => {
   if (confirm('Delete ALL data? This cannot be undone.')) {
-    store = defaultStore();
-    saveStore(store);
-    showToast('All data cleared');
-    renderDay();
-    loadSettings();
+    store = defaultStore(); saveStore(store); showToast('All data cleared'); renderDay(); loadSettings();
   }
 });
 
 // ============================================================
-// HISTORICAL WEIGHT DATA (pre-app, weekly Monday weigh-ins)
+// HISTORICAL WEIGHT DATA
 // ============================================================
 const HISTORICAL_WEIGHTS = [
   ['2021-04-05',284],['2021-04-12',286],['2021-04-19',289],['2021-04-26',286],
@@ -1964,33 +1355,12 @@ const HISTORICAL_WEIGHTS = [
 ];
 
 document.getElementById('restore-history-btn').addEventListener('click', () => {
-  const cutoff = '2026-03-30';
-  // Count how many would be added
   let addCount = 0;
-  HISTORICAL_WEIGHTS.forEach(([d]) => {
-    if (!store.days[d]) addCount++;
-  });
-
-  if (addCount === 0) {
-    showToast('History already loaded — nothing to add');
-    return;
-  }
-
-  if (!confirm(
-    `Load pre-app weekly weigh-ins?\n\n` +
-    `This adds ${addCount} Monday weight entries (Apr 2021 – Mar 2026) ` +
-    `to your data.\n\n` +
-    `Only dates with NO existing entry are touched — ` +
-    `your current app data stays exactly as-is.`
-  )) return;
-
-  HISTORICAL_WEIGHTS.forEach(([d, w]) => {
-    if (!store.days[d]) {
-      store.days[d] = { foods: [], weight: w, drinks: null, submitted: true };
-    }
-  });
-  saveStore(store);
-  showToast(`${addCount} historical entries loaded`);
+  HISTORICAL_WEIGHTS.forEach(([d]) => { if (!store.days[d]) addCount++; });
+  if (addCount === 0) { showToast('History already loaded \u2014 nothing to add'); return; }
+  if (!confirm(`Load pre-app weekly weigh-ins?\n\nThis adds ${addCount} Monday weight entries (Apr 2021 \u2013 Mar 2026) to your data.\n\nOnly dates with NO existing entry are touched \u2014 your current app data stays exactly as-is.`)) return;
+  HISTORICAL_WEIGHTS.forEach(([d, w]) => { if (!store.days[d]) store.days[d] = { foods: [], weight: w, drinks: null, submitted: true }; });
+  saveStore(store); showToast(`${addCount} historical entries loaded`);
 });
 
 // ============================================================
@@ -2001,117 +1371,74 @@ let ltYear = new Date().getFullYear();
 function getLTYearRange() {
   const allDates = Object.keys(store.days).filter(d => store.days[d].weight).sort();
   if (allDates.length === 0) return { min: ltYear, max: ltYear };
-  return {
-    min: parseInt(allDates[0].split('-')[0]),
-    max: parseInt(allDates[allDates.length - 1].split('-')[0])
-  };
+  return { min: parseInt(allDates[0].split('-')[0]), max: parseInt(allDates[allDates.length - 1].split('-')[0]) };
 }
 
-document.getElementById('lt-prev').addEventListener('click', () => {
-  const range = getLTYearRange();
-  if (ltYear > range.min) { ltYear--; renderLongTerm(); }
-});
-document.getElementById('lt-next').addEventListener('click', () => {
-  const range = getLTYearRange();
-  if (ltYear < range.max) { ltYear++; renderLongTerm(); }
-});
+document.getElementById('lt-prev').addEventListener('click', () => { const r = getLTYearRange(); if (ltYear > r.min) { ltYear--; renderLongTerm(); } });
+document.getElementById('lt-next').addEventListener('click', () => { const r = getLTYearRange(); if (ltYear < r.max) { ltYear++; renderLongTerm(); } });
 
-// Swipe support for long term chart
 (function() {
   const panel = document.getElementById('panel-longterm');
-  let touchStartX = 0;
-  let touchStartY = 0;
-  panel.addEventListener('touchstart', e => {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-  }, { passive: true });
+  let touchStartX = 0, touchStartY = 0;
+  panel.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, { passive: true });
   panel.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    const dy = e.changedTouches[0].clientY - touchStartY;
+    const dx = e.changedTouches[0].clientX - touchStartX, dy = e.changedTouches[0].clientY - touchStartY;
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-      const range = getLTYearRange();
-      if (dx > 0 && ltYear > range.min) { ltYear--; renderLongTerm(); }
-      if (dx < 0 && ltYear < range.max) { ltYear++; renderLongTerm(); }
+      const r = getLTYearRange();
+      if (dx > 0 && ltYear > r.min) { ltYear--; renderLongTerm(); }
+      if (dx < 0 && ltYear < r.max) { ltYear++; renderLongTerm(); }
     }
   }, { passive: true });
 })();
 
 function renderLongTerm() {
   document.getElementById('lt-year-label').textContent = ltYear;
-
-  // Gather all Monday weights for this year
   const yearStr = String(ltYear);
   const points = [];
   const allDates = Object.keys(store.days).sort();
+  allDates.forEach(d => { if (!d.startsWith(yearStr + '-')) return; const day = store.days[d]; if (!day.weight) return; points.push({ date: d, weight: day.weight }); });
 
-  allDates.forEach(d => {
-    if (!d.startsWith(yearStr + '-')) return;
-    const day = store.days[d];
-    if (!day.weight) return;
-    points.push({ date: d, weight: day.weight });
-  });
-
-  // Update nav button states
   const range = getLTYearRange();
   document.getElementById('lt-prev').style.opacity = ltYear > range.min ? '1' : '0.3';
   document.getElementById('lt-next').style.opacity = ltYear < range.max ? '1' : '0.3';
 
-  // Stats
   const statsEl = document.getElementById('lt-stats');
   if (points.length === 0) {
     statsEl.innerHTML = 'No weight data for ' + ltYear;
-    const ctx2 = document.getElementById('lt-chart').getContext('2d');
-    ctx2.clearRect(0, 0, ctx2.canvas.width, ctx2.canvas.height);
-    document.getElementById('lt-all-time-stats').innerHTML = '';
-    return;
+    const ctx2 = document.getElementById('lt-chart').getContext('2d'); ctx2.clearRect(0, 0, ctx2.canvas.width, ctx2.canvas.height);
+    document.getElementById('lt-all-time-stats').innerHTML = ''; return;
   }
 
   const weights = points.map(p => p.weight);
-  const minW = Math.min(...weights);
-  const maxW = Math.max(...weights);
-  const minP = points.find(p => p.weight === minW);
-  const maxP = points.find(p => p.weight === maxW);
+  const minW = Math.min(...weights), maxW = Math.max(...weights);
+  const minP = points.find(p => p.weight === minW), maxP = points.find(p => p.weight === maxW);
   const avgW = (weights.reduce((a, b) => a + b, 0) / weights.length).toFixed(1);
-  const startW = points[0].weight;
-  const endW = points[points.length - 1].weight;
+  const startW = points[0].weight, endW = points[points.length - 1].weight;
   const change = endW - startW;
-  const changeSign = change >= 0 ? '+' : '';
-  const changeColor = change <= 0 ? 'var(--green)' : 'var(--accent)';
 
   statsEl.innerHTML = `
     <div style="font-weight:700;margin-bottom:8px;color:var(--text);font-size:14px;">${ltYear} Summary</div>
-    <div style="margin-bottom:4px;"><span style="color:#4ecca3;">▼ Low:</span> ${minW} lbs <span style="color:var(--text-faint);">(${formatDate(minP.date)})</span></div>
-    <div style="margin-bottom:4px;"><span style="color:#e94560;">▲ High:</span> ${maxW} lbs <span style="color:var(--text-faint);">(${formatDate(maxP.date)})</span></div>
+    <div style="margin-bottom:4px;"><span style="color:#4ecca3;">\u25BC Low:</span> ${minW} lbs <span style="color:var(--text-faint);">(${formatDate(minP.date)})</span></div>
+    <div style="margin-bottom:4px;"><span style="color:#e94560;">\u25B2 High:</span> ${maxW} lbs <span style="color:var(--text-faint);">(${formatDate(maxP.date)})</span></div>
     <div style="margin-bottom:4px;">Avg: ${avgW} lbs &nbsp;|&nbsp; Range: ${(maxW - minW).toFixed(1)} lbs</div>
-    <div>Change: <span style="color:${changeColor};font-weight:700;">${changeSign}${change.toFixed(1)} lbs</span> <span style="color:var(--text-faint);">(${startW} → ${endW})</span></div>
+    <div>Change: <span style="color:${change <= 0 ? 'var(--green)' : 'var(--accent)'};font-weight:700;">${change >= 0 ? '+' : ''}${change.toFixed(1)} lbs</span> <span style="color:var(--text-faint);">(${startW} \u2192 ${endW})</span></div>
   `;
 
-  // All-time stats
   const allWeights = [];
-  allDates.forEach(d => {
-    const day = store.days[d];
-    if (day && day.weight) allWeights.push({ date: d, weight: day.weight });
-  });
+  allDates.forEach(d => { const day = store.days[d]; if (day && day.weight) allWeights.push({ date: d, weight: day.weight }); });
   if (allWeights.length > 1) {
     const allW = allWeights.map(p => p.weight);
-    const allMin = Math.min(...allW);
-    const allMax = Math.max(...allW);
-    const allMinP = allWeights.find(p => p.weight === allMin);
-    const allMaxP = allWeights.find(p => p.weight === allMax);
-    const first = allWeights[0];
-    const last = allWeights[allWeights.length - 1];
+    const allMin = Math.min(...allW), allMax = Math.max(...allW);
+    const allMinP = allWeights.find(p => p.weight === allMin), allMaxP = allWeights.find(p => p.weight === allMax);
+    const first = allWeights[0], last = allWeights[allWeights.length - 1];
     const allChange = last.weight - first.weight;
-    const allSign = allChange >= 0 ? '+' : '';
-    const allColor = allChange <= 0 ? 'var(--green)' : 'var(--accent)';
     document.getElementById('lt-all-time-stats').innerHTML = `
-      <div style="font-weight:700;margin-bottom:8px;color:var(--text);font-size:14px;">All-Time (${first.date.split('-')[0]}–${last.date.split('-')[0]})</div>
-      <div style="margin-bottom:4px;"><span style="color:#4ecca3;">▼ Low:</span> ${allMin} lbs <span style="color:var(--text-faint);">(${formatDate(allMinP.date)})</span></div>
-      <div style="margin-bottom:4px;"><span style="color:#e94560;">▲ High:</span> ${allMax} lbs <span style="color:var(--text-faint);">(${formatDate(allMaxP.date)})</span></div>
-      <div>Overall (historical start to last weigh-in): <span style="color:${allColor};font-weight:700;">${allSign}${allChange.toFixed(1)} lbs</span> <span style="color:var(--text-faint);">(${first.weight} → ${last.weight})</span></div>
+      <div style="font-weight:700;margin-bottom:8px;color:var(--text);font-size:14px;">All-Time (${first.date.split('-')[0]}\u2013${last.date.split('-')[0]})</div>
+      <div style="margin-bottom:4px;"><span style="color:#4ecca3;">\u25BC Low:</span> ${allMin} lbs <span style="color:var(--text-faint);">(${formatDate(allMinP.date)})</span></div>
+      <div style="margin-bottom:4px;"><span style="color:#e94560;">\u25B2 High:</span> ${allMax} lbs <span style="color:var(--text-faint);">(${formatDate(allMaxP.date)})</span></div>
+      <div>Overall: <span style="color:${allChange <= 0 ? 'var(--green)' : 'var(--accent)'};font-weight:700;">${allChange >= 0 ? '+' : ''}${allChange.toFixed(1)} lbs</span> <span style="color:var(--text-faint);">(${first.weight} \u2192 ${last.weight})</span></div>
     `;
   }
-
-  // Draw chart
   drawLTChart(points, minP, maxP);
 }
 
@@ -2119,43 +1446,25 @@ function drawLTChart(points, minPoint, maxPoint) {
   const canvas = document.getElementById('lt-chart');
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
-  canvas.width = canvas.offsetWidth * dpr;
-  canvas.height = 300 * dpr;
+  canvas.width = canvas.offsetWidth * dpr; canvas.height = 300 * dpr;
   ctx.scale(dpr, dpr);
-  const W = canvas.offsetWidth;
-  const H = 300;
+  const W = canvas.offsetWidth, H = 300;
   ctx.clearRect(0, 0, W, H);
 
-  if (points.length < 2) {
-    ctx.fillStyle = '#555e70'; ctx.font = '14px JetBrains Mono'; ctx.textAlign = 'center';
-    ctx.fillText('Not enough data for ' + ltYear, W / 2, H / 2);
-    return;
-  }
+  if (points.length < 2) { ctx.fillStyle = '#555e70'; ctx.font = '14px JetBrains Mono'; ctx.textAlign = 'center'; ctx.fillText('Not enough data for ' + ltYear, W / 2, H / 2); return; }
 
   const weights = points.map(p => p.weight);
-  let minW = Math.floor(Math.min(...weights) - 3);
-  let maxW = Math.ceil(Math.max(...weights) + 3);
+  let minW = Math.floor(Math.min(...weights) - 3), maxW = Math.ceil(Math.max(...weights) + 3);
   if (maxW - minW < 10) { minW -= 5; maxW += 5; }
 
   const pad = { t: 25, b: 35, l: 45, r: 15 };
-  const gW = W - pad.l - pad.r;
-  const gH = H - pad.t - pad.b;
-
-  // Map dates to x positions (Jan 1 to Dec 31)
-  const yearStart = new Date(ltYear, 0, 1);
-  const yearEnd = new Date(ltYear, 11, 31);
+  const gW = W - pad.l - pad.r, gH = H - pad.t - pad.b;
+  const yearStart = new Date(ltYear, 0, 1), yearEnd = new Date(ltYear, 11, 31);
   const yearDays = (yearEnd - yearStart) / (1000 * 60 * 60 * 24) + 1;
-
-  const xForDate = (d) => {
-    const dt = parseDate(d);
-    const dayOfYear = (dt - yearStart) / (1000 * 60 * 60 * 24);
-    return pad.l + (dayOfYear / yearDays) * gW;
-  };
+  const xForDate = (d) => { const dt = parseDate(d); return pad.l + ((dt - yearStart) / (1000 * 60 * 60 * 24) / yearDays) * gW; };
   const yScale = (w) => pad.t + (1 - (w - minW) / (maxW - minW)) * gH;
 
-  // Grid lines
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
   const step = maxW - minW > 30 ? 10 : 5;
   for (let w = Math.ceil(minW / step) * step; w <= maxW; w += step) {
     const y = yScale(w);
@@ -2164,79 +1473,44 @@ function drawLTChart(points, minPoint, maxPoint) {
     ctx.fillText(w + '', pad.l - 6, y + 4);
   }
 
-  // Month labels on x-axis
   const monthAbbr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   monthAbbr.forEach((m, i) => {
     const dt = new Date(ltYear, i, 15);
-    const dayOfYear = (dt - yearStart) / (1000 * 60 * 60 * 24);
-    const x = pad.l + (dayOfYear / yearDays) * gW;
+    const x = pad.l + ((dt - yearStart) / (1000 * 60 * 60 * 24) / yearDays) * gW;
     ctx.fillStyle = '#555e70'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'center';
     ctx.fillText(m, x, H - 10);
-    // Month separator
     const mStart = new Date(ltYear, i, 1);
-    const mDoy = (mStart - yearStart) / (1000 * 60 * 60 * 24);
-    const mx = pad.l + (mDoy / yearDays) * gW;
+    const mx = pad.l + ((mStart - yearStart) / (1000 * 60 * 60 * 24) / yearDays) * gW;
     ctx.strokeStyle = 'rgba(255,255,255,0.04)';
     ctx.beginPath(); ctx.moveTo(mx, pad.t); ctx.lineTo(mx, pad.t + gH); ctx.stroke();
   });
 
-  // Weight line
-  ctx.strokeStyle = 'rgba(233,69,96,0.8)';
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  points.forEach((p, i) => {
-    const x = xForDate(p.date), y = yScale(p.weight);
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
+  ctx.strokeStyle = 'rgba(233,69,96,0.8)'; ctx.lineWidth = 2.5; ctx.beginPath();
+  points.forEach((p, i) => { const x = xForDate(p.date), y = yScale(p.weight); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
   ctx.stroke();
-
-  // Area fill under line
   ctx.lineTo(xForDate(points[points.length - 1].date), pad.t + gH);
-  ctx.lineTo(xForDate(points[0].date), pad.t + gH);
-  ctx.closePath();
+  ctx.lineTo(xForDate(points[0].date), pad.t + gH); ctx.closePath();
   const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + gH);
-  grad.addColorStop(0, 'rgba(233,69,96,0.15)');
-  grad.addColorStop(1, 'rgba(233,69,96,0.01)');
-  ctx.fillStyle = grad;
-  ctx.fill();
+  grad.addColorStop(0, 'rgba(233,69,96,0.15)'); grad.addColorStop(1, 'rgba(233,69,96,0.01)');
+  ctx.fillStyle = grad; ctx.fill();
 
-  // Regular dots
-  points.forEach(p => {
-    const x = xForDate(p.date), y = yScale(p.weight);
-    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(233,69,96,0.6)'; ctx.fill();
-  });
+  points.forEach(p => { const x = xForDate(p.date), y = yScale(p.weight); ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fillStyle = 'rgba(233,69,96,0.6)'; ctx.fill(); });
 
-  // Year LOW dot (green, bigger)
   if (minPoint) {
     const x = xForDate(minPoint.date), y = yScale(minPoint.weight);
-    // Glow
-    ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(78,204,163,0.2)'; ctx.fill();
-    // Dot
-    ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2);
-    ctx.fillStyle = '#4ecca3'; ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.fillStyle = 'rgba(78,204,163,0.2)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fillStyle = '#4ecca3'; ctx.fill();
     ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 2; ctx.stroke();
-    // Label
     ctx.fillStyle = '#4ecca3'; ctx.font = 'bold 11px JetBrains Mono'; ctx.textAlign = 'center';
-    const lyDir = y > pad.t + gH / 2 ? -14 : 16;
-    ctx.fillText(minPoint.weight + '', x, y + lyDir);
+    ctx.fillText(minPoint.weight + '', x, y > pad.t + gH / 2 ? y - 14 : y + 16);
   }
-
-  // Year HIGH dot (red, bigger)
   if (maxPoint) {
     const x = xForDate(maxPoint.date), y = yScale(maxPoint.weight);
-    // Glow
-    ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(233,69,96,0.25)'; ctx.fill();
-    // Dot
-    ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2);
-    ctx.fillStyle = '#e94560'; ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.fillStyle = 'rgba(233,69,96,0.25)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fillStyle = '#e94560'; ctx.fill();
     ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 2; ctx.stroke();
-    // Label
     ctx.fillStyle = '#e94560'; ctx.font = 'bold 11px JetBrains Mono'; ctx.textAlign = 'center';
-    const hyDir = y < pad.t + gH / 2 ? -14 : 16;
-    ctx.fillText(maxPoint.weight + '', x, y + hyDir);
+    ctx.fillText(maxPoint.weight + '', x, y < pad.t + gH / 2 ? y - 14 : y + 16);
   }
 }
 
@@ -2245,8 +1519,7 @@ function drawLTChart(points, minPoint, maxPoint) {
 // ============================================================
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2000);
 }
 
@@ -2254,24 +1527,15 @@ function showToast(msg) {
 // INIT
 // ============================================================
 renderDay();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 
-// Register service worker
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
-}
-
-// roundRect polyfill for older browsers
 if (!CanvasRenderingContext2D.prototype.roundRect) {
   CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
     if (!Array.isArray(r)) r = [r, r, r, r];
-    this.moveTo(x + r[0], y);
-    this.lineTo(x + w - r[1], y);
-    this.quadraticCurveTo(x + w, y, x + w, y + r[1]);
-    this.lineTo(x + w, y + h - r[2]);
-    this.quadraticCurveTo(x + w, y + h, x + w - r[2], y + h);
-    this.lineTo(x + r[3], y + h);
-    this.quadraticCurveTo(x, y + h, x, y + h - r[3]);
-    this.lineTo(x, y + r[0]);
+    this.moveTo(x + r[0], y); this.lineTo(x + w - r[1], y);
+    this.quadraticCurveTo(x + w, y, x + w, y + r[1]); this.lineTo(x + w, y + h - r[2]);
+    this.quadraticCurveTo(x + w, y + h, x + w - r[2], y + h); this.lineTo(x + r[3], y + h);
+    this.quadraticCurveTo(x, y + h, x, y + h - r[3]); this.lineTo(x, y + r[0]);
     this.quadraticCurveTo(x, y, x + r[0], y);
   };
 }
