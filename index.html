@@ -1088,7 +1088,7 @@ function drawWeightChart() {
       }
     });
 
-    // Trend line (linear regression on displayed past weights only)
+    // Trend line (linear regression on displayed past weights, extended full width like Excel)
     if (store.settings.showTrend && pastWeights.length >= 2) {
       const n = pastWeights.length;
       const sumX = pastWeights.reduce((s, p) => s + p.idx, 0);
@@ -1097,16 +1097,11 @@ function drawWeightChart() {
       const sumX2 = pastWeights.reduce((s, p) => s + p.idx * p.idx, 0);
       const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
       const intercept = (sumY - slope * sumX) / n;
-      const firstIdx = pastWeights[0].idx, lastIdx = pastWeights[n - 1].idx;
-      const y1 = yScale(slope * firstIdx + intercept), y2 = yScale(slope * lastIdx + intercept);
-      ctx.strokeStyle = '#f0c040'; ctx.lineWidth = 2; ctx.setLineDash([8, 4]);
-      ctx.beginPath(); ctx.moveTo(xScale(firstIdx), y1); ctx.lineTo(xScale(lastIdx), y2); ctx.stroke();
+      const startIdx = 0, endIdx = dates.length - 1;
+      const y1 = yScale(slope * startIdx + intercept), y2 = yScale(slope * endIdx + intercept);
+      ctx.strokeStyle = 'rgba(240,192,64,0.5)'; ctx.lineWidth = 1.5; ctx.setLineDash([8, 4]);
+      ctx.beginPath(); ctx.moveTo(xScale(startIdx), y1); ctx.lineTo(xScale(endIdx), y2); ctx.stroke();
       ctx.setLineDash([]);
-      // Label the weekly rate
-      const weeklyLbs = slope * 7;
-      const sign = weeklyLbs >= 0 ? '+' : '';
-      ctx.fillStyle = '#f0c040'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'right';
-      ctx.fillText(sign + weeklyLbs.toFixed(2) + '/wk', xScale(lastIdx) - 4, y2 - 8);
     }
   }
 }
