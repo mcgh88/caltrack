@@ -346,10 +346,13 @@ input[type="date"] { -webkit-appearance: none; }
   <div class="graph-controls">
     <span style="font-family:var(--mono);font-size:12px;color:var(--text-dim);" id="graph-range-label"></span>
     <button class="btn btn-sm btn-outline" id="toggle-projection" style="margin-left:auto;">Projection: On</button>
+    <button class="btn btn-sm btn-outline" id="toggle-trend">Trend: Off</button>
   </div>
   <div class="legend">
-    <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Actual</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#5b9bd5"></div> Weigh-in</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Calculated</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Projected</div>
+    <div class="legend-item" id="trend-legend" style="display:none;"><div class="legend-dot" style="background:#f0c040"></div> Trend</div>
   </div>
   <div class="canvas-wrap"><canvas id="weight-chart" height="250"></canvas></div>
   <div class="canvas-wrap"><canvas id="calorie-chart" height="200"></canvas></div>
@@ -357,6 +360,7 @@ input[type="date"] { -webkit-appearance: none; }
     <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Calories</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div> Target</div>
   </div>
+  <div id="calculated-tdee-box" style="background:var(--surface);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;font-family:var(--mono);font-size:13px;color:var(--text-dim);"></div>
 </div>
 
 <!-- CALENDAR PANEL -->
@@ -973,12 +977,20 @@ function renderGraphs() {
   const end = getDisplayEndDate();
   document.getElementById('graph-range-label').textContent = formatDate(start) + ' \u2192 ' + formatDate(end) + ' (' + (store.settings.weeks || 12) + ' weeks)';
   document.getElementById('toggle-projection').textContent = store.settings.hideProjection ? 'Projection: Off' : 'Projection: On';
+  document.getElementById('toggle-trend').textContent = store.settings.showTrend ? 'Trend: On' : 'Trend: Off';
+  document.getElementById('trend-legend').style.display = store.settings.showTrend ? 'flex' : 'none';
   drawWeightChart();
   drawCalorieChart();
+  renderCalculatedTDEE();
 }
 
 document.getElementById('toggle-projection').addEventListener('click', () => {
   store.settings.hideProjection = !store.settings.hideProjection;
+  saveStore(store); renderGraphs();
+});
+
+document.getElementById('toggle-trend').addEventListener('click', () => {
+  store.settings.showTrend = !store.settings.showTrend;
   saveStore(store); renderGraphs();
 });
 
@@ -1064,16 +1076,38 @@ function drawWeightChart() {
       const dow = parseDate(p.date).getDay();
       if (dow === 1) {
         const sz = 5;
-        ctx.fillStyle = '#f0c040'; ctx.fillRect(x - sz, y - sz, sz * 2, sz * 2);
+        const dotColor = p.isActual ? '#5b9bd5' : '#f0c040';
+        ctx.fillStyle = dotColor; ctx.fillRect(x - sz, y - sz, sz * 2, sz * 2);
         ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 1; ctx.strokeRect(x - sz, y - sz, sz * 2, sz * 2);
-        ctx.fillStyle = '#f0c040'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'left';
+        ctx.fillStyle = dotColor; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'left';
         ctx.fillText(p.w.toFixed(1), x + 8, y - 10 < pad.t + 10 ? y + 16 : y - 10);
       } else {
         ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2);
-        ctx.fillStyle = '#e94560'; ctx.fill();
+        ctx.fillStyle = p.isActual ? '#5b9bd5' : '#e94560'; ctx.fill();
         ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 1.5; ctx.stroke();
       }
     });
+
+    // Trend line (linear regression on displayed past weights only)
+    if (store.settings.showTrend && pastWeights.length >= 2) {
+      const n = pastWeights.length;
+      const sumX = pastWeights.reduce((s, p) => s + p.idx, 0);
+      const sumY = pastWeights.reduce((s, p) => s + p.w, 0);
+      const sumXY = pastWeights.reduce((s, p) => s + p.idx * p.w, 0);
+      const sumX2 = pastWeights.reduce((s, p) => s + p.idx * p.idx, 0);
+      const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+      const intercept = (sumY - slope * sumX) / n;
+      const firstIdx = pastWeights[0].idx, lastIdx = pastWeights[n - 1].idx;
+      const y1 = yScale(slope * firstIdx + intercept), y2 = yScale(slope * lastIdx + intercept);
+      ctx.strokeStyle = '#f0c040'; ctx.lineWidth = 2; ctx.setLineDash([8, 4]);
+      ctx.beginPath(); ctx.moveTo(xScale(firstIdx), y1); ctx.lineTo(xScale(lastIdx), y2); ctx.stroke();
+      ctx.setLineDash([]);
+      // Label the weekly rate
+      const weeklyLbs = slope * 7;
+      const sign = weeklyLbs >= 0 ? '+' : '';
+      ctx.fillStyle = '#f0c040'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'right';
+      ctx.fillText(sign + weeklyLbs.toFixed(2) + '/wk', xScale(lastIdx) - 4, y2 - 8);
+    }
   }
 }
 
@@ -1155,6 +1189,94 @@ function drawCalorieChart() {
       ctx.fillText(parts[1] + '/' + parts[2], x, H - 8);
     }
   });
+}
+
+// ============================================================
+// CALCULATED TDEE
+// ============================================================
+function renderCalculatedTDEE() {
+  const el = document.getElementById('calculated-tdee-box');
+  const dates = getDisplayDateRange();
+  const today = todayStr();
+
+  // Find pairs of actual weigh-ins within the displayed range that have logged calories between them
+  const weighIns = [];
+  dates.forEach(d => {
+    if (d > today) return;
+    const day = store.days[d];
+    if (day && day.weight) weighIns.push({ date: d, weight: day.weight });
+  });
+
+  if (weighIns.length < 2) {
+    el.innerHTML = '<div style="font-weight:700;margin-bottom:6px;color:var(--text);font-size:14px;">Calculated TDEE</div><div>Need at least 2 weigh-ins in the displayed range to calculate.</div>';
+    return;
+  }
+
+  // For each pair of consecutive weigh-ins, compute TDEE:
+  // weight_change_lbs * 3500 = total_surplus over the period
+  // total_calories_eaten - TDEE * num_days = weight_change * 3500
+  // So TDEE = (total_calories_eaten - weight_change * 3500) / num_days
+  let totalCalories = 0;
+  let totalDays = 0;
+  let totalWeightChange = 0;
+  let usablePairs = 0;
+
+  for (let i = 0; i < weighIns.length - 1; i++) {
+    const w1 = weighIns[i], w2 = weighIns[i + 1];
+    // Count days and sum calories between them (only if all days have logged food)
+    let cur = addDays(w1.date, 1);
+    let pairCals = 0;
+    let pairDays = 0;
+    let allLogged = true;
+    // Include the first weigh-in day's calories too
+    const day0 = store.days[w1.date];
+    if (day0 && day0.foods && day0.foods.length > 0) {
+      pairCals += dayTotal(day0);
+      pairDays++;
+    } else {
+      allLogged = false;
+    }
+    while (cur < w2.date) {
+      const day = store.days[cur];
+      if (!day || !day.foods || day.foods.length === 0) { allLogged = false; break; }
+      pairCals += dayTotal(day);
+      pairDays++;
+      cur = addDays(cur, 1);
+    }
+    // Include the last weigh-in day's calories
+    if (allLogged) {
+      const dayLast = store.days[w2.date];
+      if (dayLast && dayLast.foods && dayLast.foods.length > 0) {
+        pairCals += dayTotal(dayLast);
+        pairDays++;
+      }
+    }
+    if (!allLogged || pairDays === 0) continue;
+    const wChange = w2.weight - w1.weight;
+    totalCalories += pairCals;
+    totalDays += pairDays;
+    totalWeightChange += wChange;
+    usablePairs++;
+  }
+
+  if (usablePairs === 0 || totalDays === 0) {
+    el.innerHTML = '<div style="font-weight:700;margin-bottom:6px;color:var(--text);font-size:14px;">Calculated TDEE</div><div>Need consecutive weigh-ins with all days logged between them.</div>';
+    return;
+  }
+
+  // TDEE = (total_calories - weight_change_lbs * 3500) / total_days
+  const calcTDEE = Math.round((totalCalories - totalWeightChange * 3500) / totalDays);
+  const diff = calcTDEE - (store.settings.tdee || 2650);
+  const diffSign = diff >= 0 ? '+' : '';
+  const diffColor = Math.abs(diff) < 100 ? 'var(--green)' : 'var(--yellow)';
+
+  el.innerHTML = `
+    <div style="font-weight:700;margin-bottom:8px;color:var(--text);font-size:14px;">Calculated TDEE</div>
+    <div style="font-size:22px;font-weight:700;color:var(--accent2);margin-bottom:6px;">${calcTDEE.toLocaleString()} cal/day</div>
+    <div style="margin-bottom:4px;">Based on ${usablePairs} weigh-in pair${usablePairs > 1 ? 's' : ''} over ${totalDays} logged days</div>
+    <div style="margin-bottom:4px;">Weight change: <span style="color:${totalWeightChange <= 0 ? 'var(--green)' : 'var(--accent)'};">${totalWeightChange >= 0 ? '+' : ''}${totalWeightChange.toFixed(1)} lbs</span></div>
+    <div>vs. your setting (${store.settings.tdee}): <span style="color:${diffColor};">${diffSign}${diff} cal/day</span></div>
+  `;
 }
 
 // ============================================================
