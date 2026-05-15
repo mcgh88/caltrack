@@ -361,6 +361,11 @@ input[type="date"] { -webkit-appearance: none; }
     <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div> Target</div>
   </div>
   <div id="calculated-tdee-box" style="background:var(--surface);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;font-family:var(--mono);font-size:13px;color:var(--text-dim);"></div>
+  <div style="background:var(--surface);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;font-family:var(--mono);font-size:11px;color:var(--text-faint);line-height:1.6;">
+    <span style="color:var(--text-dim);font-weight:600;">ℹ How these are calculated</span><br>
+    <span style="color:var(--yellow);">Trend line</span> — linear regression on <em>actual weigh-ins only</em> (blue dots) within the displayed date range. Calculated/projected weights are excluded.<br>
+    <span style="color:var(--accent2);">Calculated TDEE</span> — derived from actual weigh-ins paired with logged calories between them, using only data visible on these graphs.
+  </div>
 </div>
 
 <!-- CALENDAR PANEL -->
@@ -1088,13 +1093,14 @@ function drawWeightChart() {
       }
     });
 
-    // Trend line (linear regression on displayed past weights, extended full width like Excel)
-    if (store.settings.showTrend && pastWeights.length >= 2) {
-      const n = pastWeights.length;
-      const sumX = pastWeights.reduce((s, p) => s + p.idx, 0);
-      const sumY = pastWeights.reduce((s, p) => s + p.w, 0);
-      const sumXY = pastWeights.reduce((s, p) => s + p.idx * p.w, 0);
-      const sumX2 = pastWeights.reduce((s, p) => s + p.idx * p.idx, 0);
+    // Trend line (linear regression on ACTUAL weigh-ins only within displayed range)
+    const actualPastWeights = pastWeights.filter(p => p.isActual);
+    if (store.settings.showTrend && actualPastWeights.length >= 2) {
+      const n = actualPastWeights.length;
+      const sumX = actualPastWeights.reduce((s, p) => s + p.idx, 0);
+      const sumY = actualPastWeights.reduce((s, p) => s + p.w, 0);
+      const sumXY = actualPastWeights.reduce((s, p) => s + p.idx * p.w, 0);
+      const sumX2 = actualPastWeights.reduce((s, p) => s + p.idx * p.idx, 0);
       const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
       const intercept = (sumY - slope * sumX) / n;
       const startIdx = 0, endIdx = dates.length - 1;
