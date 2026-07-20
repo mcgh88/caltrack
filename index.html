@@ -524,13 +524,11 @@ function getStore() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultStore();
     const data = JSON.parse(raw);
-    const d = defaultStore().settings;
-    if (!data.settings.targetWeekday && !data.settings.targetWeekend) {
-      data.settings.targetWeekday = d.targetWeekday;
-      data.settings.targetWeekend = d.targetWeekend;
-    }
-    if (!data.settings.tdee) data.settings.tdee = d.tdee;
-    if (!data.settings.weeks) data.settings.weeks = d.weeks;
+    const def = defaultStore();
+    if (!data || typeof data !== 'object') return def;
+    data.days = data.days || {};
+    // Merge stored settings over defaults: preserves user values, fills any missing/new fields
+    data.settings = Object.assign({}, def.settings, data.settings || {});
     return data;
   } catch { return defaultStore(); }
 }
@@ -576,9 +574,10 @@ function getDay(store, dateStr) {
 
 function evalCalExpr(expr) {
   try {
-    const cleaned = expr.replace(/[^0-9+\-*/().]/g, '');
+    const cleaned = String(expr).replace(/[^0-9+\-*/().]/g, '');
     if (!cleaned) return 0;
-    return Math.round(Function('"use strict"; return (' + cleaned + ')')());
+    const val = Function('"use strict"; return (' + cleaned + ')')();
+    return Number.isFinite(val) ? Math.round(val) : 0;
   } catch { return 0; }
 }
 
@@ -710,6 +709,7 @@ function switchToTab(tab) {
     const dy = e.changedTouches[0].clientY - touchStartY;
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 2) {
       const currentTab = document.querySelector('.tab-btn.active').dataset.tab;
+      if (currentTab === 'longterm') return; // Long Term owns horizontal swipes (year navigation)
       const idx = tabOrder.indexOf(currentTab);
       if (dx < 0 && idx < tabOrder.length - 1) switchToTab(tabOrder[idx + 1]);
       if (dx > 0 && idx > 0) switchToTab(tabOrder[idx - 1]);
@@ -745,7 +745,7 @@ function renderDay() {
   document.getElementById('day-target-label').textContent = 'of ' + target.toLocaleString() + (isWeekend ? ' (wknd)' : ' (wkday)');
 
   const bar = document.getElementById('day-bar');
-  const pct = target > 0 ? Math.min((total / target) * 100, 100) : 0;
+  const pct = target > 0 ? Math.max(0, Math.min((total / target) * 100, 100)) : 0;
   bar.style.width = pct + '%';
   bar.classList.toggle('over', total > target);
 
@@ -779,13 +779,11 @@ function renderDay() {
     el.addEventListener('click', () => {
       const idx = parseInt(el.dataset.idx);
       const newCal = prompt('Edit calories:', day.foods[idx].cal);
-      if (newCal !== null) {
+      if (newCal !== null && newCal.trim() !== '') {
         const val = evalCalExpr(newCal);
-        if (val > 0) {
-          day.foods[idx].cal = val;
-          day.foods[idx].expr = newCal;
-          saveStore(store); renderDay();
-        }
+        day.foods[idx].cal = val;
+        day.foods[idx].expr = newCal;
+        saveStore(store); renderDay();
       }
     });
   });
@@ -816,16 +814,30 @@ function addFood() {
   let raw = nameEl.value.trim();
   if (!raw) return;
 
+  // Value-only quick entry: whole input is a pure math expression (digits, + - * / ( ) . spaces).
+  // Populates directly with no name and no prompt. Supports negatives, e.g. -50, 600-100, 170*3.
+  if (/^[\d+\-*/().\s]+$/.test(raw) && /\d/.test(raw)) {
+    const val = evalCalExpr(raw);
+    if (val !== 0) {
+      const day = getDay(store, currentDate);
+      day.foods.push({ name: '', expr: raw, cal: val });
+      saveStore(store);
+      nameEl.value = ''; nameEl.focus();
+      renderDay();
+      return;
+    }
+  }
+
   let name = raw;
   let expr = '';
 
-  // Try to parse trailing math expression from name: "chicken 170*3"
-  const match = raw.match(/^(.+?)\s+([\d(][\d+\-*/().]*\)?)$/);
+  // Try to parse trailing math expression from name: "chicken 170*3" or "walk -200"
+  const match = raw.match(/^(.+?)\s+([-+]?[\d(][\d+\-*/().]*\)?)$/);
   if (match) {
     const possibleName = match[1].trim();
     const possibleExpr = match[2].trim();
     const val = evalCalExpr(possibleExpr);
-    if (val > 0) {
+    if (val !== 0) {
       name = possibleName;
       expr = possibleExpr;
     }
@@ -833,8 +845,8 @@ function addFood() {
 
   let cal = evalCalExpr(expr);
 
-  // If calories are 0, prompt the user
-  if (cal === 0) {
+  // If no calories parsed, prompt the user
+  if (!expr || cal === 0) {
     const manualCal = prompt('No calories detected for "' + name + '". Enter calories:', '');
     if (manualCal === null) return; // cancelled
     const parsed = evalCalExpr(manualCal);
@@ -1383,7 +1395,7 @@ function updateWeeklyProjection() {
 
 // Export / Import / Clear
 document.getElementById('export-btn').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify({ days: store.days }, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ settings: store.settings, days: store.days }, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = 'caltrack_export.json'; a.click();
   URL.revokeObjectURL(url); showToast('Data exported');
@@ -1396,8 +1408,16 @@ document.getElementById('import-file').addEventListener('change', (e) => {
   reader.onload = () => {
     try {
       const imported = JSON.parse(reader.result);
-      if (imported.days) { Object.assign(store.days, imported.days); saveStore(store); showToast('Day data imported'); renderDay(); }
-      else showToast('Invalid file \u2014 no days found');
+      let didImport = false;
+      if (imported.days) { Object.assign(store.days, imported.days); didImport = true; }
+      if (imported.settings) { store.settings = Object.assign({}, store.settings, imported.settings); didImport = true; }
+      if (didImport) {
+        saveStore(store);
+        showToast(imported.settings ? 'Data & settings imported' : 'Day data imported');
+        renderDay(); loadSettings();
+      } else {
+        showToast('Invalid file \u2014 nothing to import');
+      }
     } catch { showToast('Error reading file'); }
   };
   reader.readAsText(file);
