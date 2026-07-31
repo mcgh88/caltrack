@@ -201,6 +201,35 @@ canvas { width: 100%; height: 250px; display: block; }
   width: 160px; text-align: right;
 }
 .setting-row input:focus { border-color: var(--accent); }
+.setting-row select {
+  background: var(--bg); border: 1px solid var(--text-faint);
+  color: var(--text); font-family: var(--mono); font-size: 14px;
+  padding: 8px 10px; border-radius: 8px; outline: none;
+  width: 160px; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  text-align: right; text-align-last: right;
+}
+.setting-row select:focus { border-color: var(--accent); }
+.setting-row input:disabled, .setting-row select:disabled { opacity: 0.35; }
+
+/* Link switch */
+.switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+.switch input {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; margin: 0; padding: 0; z-index: 2; cursor: pointer;
+  -webkit-appearance: none; appearance: none; border: none;
+}
+.switch .track {
+  position: absolute; inset: 0; background: var(--surface2);
+  border-radius: 13px; transition: background 0.2s;
+}
+.switch .track::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 20px; height: 20px; background: var(--text-dim);
+  border-radius: 50%; transition: transform 0.2s, background 0.2s;
+}
+.switch input:checked + .track { background: rgba(78,204,163,0.25); }
+.switch input:checked + .track::after { transform: translateX(20px); background: var(--green); }
 
 /* Toast */
 .toast {
@@ -392,22 +421,26 @@ input[type="date"] { -webkit-appearance: none; }
   <div class="setting-group">
     <h3>// ranges</h3>
     <div class="setting-row">
-      <label>Graph start</label>
-      <input type="date" id="set-graph-start">
-    </div>
-    <div class="setting-row">
-      <label>Graph weeks</label>
-      <input type="number" id="set-graph-weeks" placeholder="12" min="1" max="104" inputmode="numeric">
-    </div>
-    <div class="setting-row">
       <label>Calendar start</label>
       <input type="date" id="set-cal-start">
     </div>
     <div class="setting-row">
       <label>Calendar weeks</label>
-      <input type="number" id="set-cal-weeks" placeholder="26" min="1" max="104" inputmode="numeric">
+      <select id="set-cal-weeks"></select>
     </div>
-    <div style="font-size:11px;color:var(--text-faint);margin-top:8px;font-family:var(--mono);line-height:1.5;">Each view shows only its own window. The calendar renders nothing before its start date. Calculations always run across whatever these windows cover.</div>
+    <div class="setting-row" style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);">
+      <label>Graph copies calendar range</label>
+      <span class="switch"><input type="checkbox" id="set-link-graph"><span class="track"></span></span>
+    </div>
+    <div class="setting-row">
+      <label>Graph start</label>
+      <input type="date" id="set-graph-start">
+    </div>
+    <div class="setting-row">
+      <label>Graph weeks</label>
+      <select id="set-graph-weeks"></select>
+    </div>
+    <div style="font-size:11px;color:var(--text-faint);margin-top:8px;font-family:var(--mono);line-height:1.5;">Each view shows only its own window. The calendar renders nothing before its start date. Turn on the toggle to lock the graph to the calendar window; turn it off to set the graph separately. Calculations always run across whatever these windows cover.</div>
   </div>
   <button class="btn btn-green btn-block" id="save-settings-btn">Save Settings</button>
   <div class="setting-group danger-zone">
@@ -473,7 +506,7 @@ function getStore() {
 
 function defaultStore() {
   return {
-    settings: { tdee: 2650, targetWeekday: 1250, targetWeekend: 1750, graphStart: addDays(todayStr(), -28), graphWeeks: 12, calStart: addDays(todayStr(), -28), calWeeks: 26 },
+    settings: { tdee: 2650, targetWeekday: 1250, targetWeekend: 1750, graphStart: addDays(todayStr(), -28), graphWeeks: 12, calStart: addDays(todayStr(), -28), calWeeks: 26, linkGraph: false },
     days: {}
   };
 }
@@ -1146,15 +1179,44 @@ function drawCalorieChart(model, dates) {
 // ============================================================
 // SETTINGS
 // ============================================================
+// Week pickers: native wheel on iOS, dropdown elsewhere. No typing.
+['set-cal-weeks', 'set-graph-weeks'].forEach(id => {
+  const sel = document.getElementById(id);
+  for (let w = 1; w <= 104; w++) {
+    const o = document.createElement('option');
+    o.value = w;
+    o.textContent = w === 1 ? '1 week' : w + ' weeks';
+    sel.appendChild(o);
+  }
+});
+
+function applyGraphLink() {
+  const linked = document.getElementById('set-link-graph').checked;
+  const gs = document.getElementById('set-graph-start');
+  const gw = document.getElementById('set-graph-weeks');
+  if (linked) {
+    gs.value = document.getElementById('set-cal-start').value;
+    gw.value = document.getElementById('set-cal-weeks').value;
+  }
+  gs.disabled = linked;
+  gw.disabled = linked;
+}
+
+['set-link-graph', 'set-cal-start', 'set-cal-weeks'].forEach(id => {
+  document.getElementById(id).addEventListener('change', applyGraphLink);
+});
+
 function loadSettings() {
   const s = store.settings;
   document.getElementById('set-tdee').value = s.tdee || '';
   document.getElementById('set-target-weekday').value = s.targetWeekday || '';
   document.getElementById('set-target-weekend').value = s.targetWeekend || '';
-  document.getElementById('set-graph-start').value = graphStart();
-  document.getElementById('set-graph-weeks').value = graphWeeks();
   document.getElementById('set-cal-start').value = calStart();
   document.getElementById('set-cal-weeks').value = calWeeks();
+  document.getElementById('set-link-graph').checked = !!s.linkGraph;
+  document.getElementById('set-graph-start').value = graphStart();
+  document.getElementById('set-graph-weeks').value = graphWeeks();
+  applyGraphLink();
   updateWeeklyProjection();
 }
 
@@ -1168,10 +1230,16 @@ document.getElementById('save-settings-btn').addEventListener('click', () => {
   store.settings.tdee = parseInt(document.getElementById('set-tdee').value) || store.settings.tdee;
   store.settings.targetWeekday = parseInt(document.getElementById('set-target-weekday').value) || 1250;
   store.settings.targetWeekend = parseInt(document.getElementById('set-target-weekend').value) || 1750;
-  store.settings.graphStart = document.getElementById('set-graph-start').value || addDays(todayStr(), -28);
-  store.settings.graphWeeks = clampWeeks(document.getElementById('set-graph-weeks').value, 12);
   store.settings.calStart = document.getElementById('set-cal-start').value || addDays(todayStr(), -28);
   store.settings.calWeeks = clampWeeks(document.getElementById('set-cal-weeks').value, 26);
+  store.settings.linkGraph = document.getElementById('set-link-graph').checked;
+  if (store.settings.linkGraph) {
+    store.settings.graphStart = store.settings.calStart;
+    store.settings.graphWeeks = store.settings.calWeeks;
+  } else {
+    store.settings.graphStart = document.getElementById('set-graph-start').value || addDays(todayStr(), -28);
+    store.settings.graphWeeks = clampWeeks(document.getElementById('set-graph-weeks').value, 12);
+  }
   saveStore(store); showToast('Settings saved');
   loadSettings(); renderDay();
 });
