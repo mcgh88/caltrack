@@ -219,7 +219,6 @@ input[type="date"] { -webkit-appearance: none; }
 .no-data { text-align: center; padding: 40px 20px; color: var(--text-dim); font-size: 14px; }
 .danger-zone { margin-top: 24px; }
 .btn-danger { background: rgba(233,69,96,0.15); color: var(--accent); border: 1px solid var(--accent); }
-#panel-longterm .canvas-wrap { touch-action: pan-y; }
 
 /* Calendar */
 .cal-month-header {
@@ -299,10 +298,6 @@ input[type="date"] { -webkit-appearance: none; }
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="6" y="13" width="3" height="3" rx="0.5"/><rect x="10.5" y="13" width="3" height="3" rx="0.5"/><rect x="15" y="13" width="3" height="3" rx="0.5"/></svg>
     Cal
   </button>
-  <button class="tab-btn" data-tab="longterm">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><polyline points="17 7 21 7 21 11"/></svg>
-    Long Term
-  </button>
   <button class="tab-btn" data-tab="settings">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     Settings
@@ -342,59 +337,36 @@ input[type="date"] { -webkit-appearance: none; }
 
 <!-- GRAPH PANEL -->
 <div class="panel" id="panel-graph">
-  <div class="panel-header">Weight & Trends</div>
+  <div class="panel-header">Weight &amp; Calories</div>
   <div class="graph-controls">
     <span style="font-family:var(--mono);font-size:12px;color:var(--text-dim);" id="graph-range-label"></span>
-    <button class="btn btn-sm btn-outline" id="toggle-projection" style="margin-left:auto;">Projection: On</button>
-    <button class="btn btn-sm btn-outline" id="toggle-trend">Trend: Off</button>
   </div>
   <div class="legend">
     <div class="legend-item"><div class="legend-dot" style="background:#5b9bd5"></div> Weigh-in</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Calculated</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Projected</div>
-    <div class="legend-item" id="trend-legend" style="display:none;"><div class="legend-dot" style="background:#f0c040"></div> Trend</div>
   </div>
   <div class="canvas-wrap"><canvas id="weight-chart" height="250"></canvas></div>
   <div class="canvas-wrap"><canvas id="calorie-chart" height="200"></canvas></div>
   <div class="legend">
     <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Calories</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div> Target</div>
-  </div>
-  <div id="calculated-tdee-box" style="background:var(--surface);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;font-family:var(--mono);font-size:13px;color:var(--text-dim);"></div>
-  <div style="background:var(--surface);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;font-family:var(--mono);font-size:11px;color:var(--text-faint);line-height:1.6;">
-    <span style="color:var(--text-dim);font-weight:600;">ℹ How these are calculated</span><br>
-    <span style="color:var(--yellow);">Trend line</span> — linear regression on <em>actual weigh-ins only</em> (blue dots) within the displayed date range. Calculated/projected weights are excluded.<br>
-    <span style="color:var(--accent2);">Calculated TDEE</span> — derived from actual weigh-ins paired with logged calories between them, using only data visible on these graphs.
+    <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div> Unlogged</div>
   </div>
 </div>
 
 <!-- CALENDAR PANEL -->
 <div class="panel" id="panel-calendar">
   <div class="panel-header">Calendar</div>
-  <div class="legend" style="margin-bottom:8px;">
+  <div style="font-family:var(--mono);font-size:12px;color:var(--text-dim);margin-bottom:10px;" id="calendar-range-label"></div>
+  <div class="legend" style="margin-bottom:8px;flex-wrap:wrap;gap:10px;">
     <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Under target</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Over target</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div> &#x1F37A; Drank</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div> Over target</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Over TDEE</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div> Unlogged</div>
+    <div class="legend-item">&#x1F37A; Drank</div>
   </div>
   <div id="calendar-grid"></div>
-</div>
-
-<!-- LONG TERM PANEL -->
-<div class="panel" id="panel-longterm">
-  <div class="panel-header">Long Term Weight</div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-    <button class="btn btn-sm btn-outline" id="lt-prev">&larr;</button>
-    <span id="lt-year-label" style="font-family:var(--mono);font-size:18px;font-weight:700;"></span>
-    <button class="btn btn-sm btn-outline" id="lt-next">&rarr;</button>
-  </div>
-  <div class="legend" style="margin-bottom:4px;">
-    <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Weight</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#4ecca3"></div> Year low</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#e94560"></div> Year high</div>
-  </div>
-  <div class="canvas-wrap"><canvas id="lt-chart" height="300"></canvas></div>
-  <div id="lt-stats" style="background:var(--surface);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;font-family:var(--mono);font-size:13px;color:var(--text-dim);"></div>
-  <div id="lt-all-time-stats" style="background:var(--surface);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;font-family:var(--mono);font-size:13px;color:var(--text-dim);"></div>
 </div>
 
 <!-- SETTINGS PANEL -->
@@ -415,61 +387,27 @@ input[type="date"] { -webkit-appearance: none; }
       <input type="number" id="set-target-weekend" placeholder="1750" inputmode="numeric">
     </div>
     <div id="weekly-projection" style="margin-top:12px;padding:10px;background:var(--bg);border-radius:8px;font-family:var(--mono);font-size:13px;color:var(--text-dim);"></div>
+    <div style="font-size:11px;color:var(--text-faint);margin-top:8px;font-family:var(--mono);line-height:1.5;">Day colours &mdash; <span style="color:var(--green);">green</span>: at or under target &middot; <span style="color:var(--yellow);">yellow</span>: over target but under TDEE &middot; <span style="color:var(--accent);">red</span>: over TDEE &middot; <span style="color:var(--purple);">purple</span>: never logged, shown as &quot;!&quot; and counted as TDEE so weight holds flat.</div>
   </div>
   <div class="setting-group">
-    <h3>// display</h3>
+    <h3>// ranges</h3>
     <div class="setting-row">
-      <label>Color mode</label>
-      <select id="set-color-mode" style="background:var(--bg);border:1px solid var(--text-faint);color:var(--text);font-family:var(--mono);font-size:13px;padding:8px;border-radius:8px;width:160px;">
-        <option value="two">Green / Red</option>
-        <option value="three">Green / Yellow / Red</option>
-      </select>
-    </div>
-    <div style="font-size:11px;color:var(--text-faint);margin-top:4px;font-family:var(--mono);">Three-tier: green=under target, yellow=over target but under TDEE, red=over TDEE</div>
-  </div>
-  <div class="setting-group">
-    <h3>// graph</h3>
-    <div class="setting-row">
-      <label>Goal weight (lbs)</label>
-      <input type="number" id="set-goal-weight" placeholder="180" step="0.1" inputmode="decimal">
+      <label>Graph start</label>
+      <input type="date" id="set-graph-start">
     </div>
     <div class="setting-row">
-      <label>Start date</label>
-      <input type="date" id="set-start-date">
+      <label>Graph weeks</label>
+      <input type="number" id="set-graph-weeks" placeholder="12" min="1" max="104" inputmode="numeric">
     </div>
     <div class="setting-row">
-      <label>Weeks to display</label>
-      <input type="number" id="set-weeks" placeholder="12" min="1" max="104" inputmode="numeric">
-    </div>
-    <div style="font-size:11px;color:var(--text-faint);margin-top:8px;font-family:var(--mono);">Start date and weeks only control what's shown on the Graph tab.</div>
-  </div>
-  <div class="setting-group">
-    <h3>// calendar</h3>
-    <div class="setting-row">
-      <label>Calendar floor date</label>
-      <input type="date" id="set-cal-manual-start">
-    </div>
-    <div style="font-size:11px;color:var(--text-faint);margin-top:8px;font-family:var(--mono);">Calendar always spans 2 months back to 6 months forward from today, week starting Monday. Set a floor date to hide all dates before it (leave blank for none).</div>
-  </div>
-  <div class="setting-group">
-    <h3>// secondary interval</h3>
-    <div class="setting-row">
-      <label>Start date</label>
-      <input type="date" id="set-sec-start">
+      <label>Calendar start</label>
+      <input type="date" id="set-cal-start">
     </div>
     <div class="setting-row">
-      <label>End date</label>
-      <input type="date" id="set-sec-end">
+      <label>Calendar weeks</label>
+      <input type="number" id="set-cal-weeks" placeholder="26" min="1" max="104" inputmode="numeric">
     </div>
-    <div class="setting-row">
-      <label>Weekday target (cal)</label>
-      <input type="number" id="set-sec-weekday" placeholder="1250" inputmode="numeric">
-    </div>
-    <div class="setting-row">
-      <label>Weekend target (cal)</label>
-      <input type="number" id="set-sec-weekend" placeholder="1750" inputmode="numeric">
-    </div>
-    <div style="font-size:11px;color:var(--text-faint);margin-top:8px;font-family:var(--mono);">Within this date range these targets override the primary ones — affecting future projections, calendar coloring, and the calorie bar graph. Leave dates blank to disable.</div>
+    <div style="font-size:11px;color:var(--text-faint);margin-top:8px;font-family:var(--mono);line-height:1.5;">Each view shows only its own window. The calendar renders nothing before its start date. Calculations always run across whatever these windows cover.</div>
   </div>
   <button class="btn btn-green btn-block" id="save-settings-btn">Save Settings</button>
   <div class="setting-group danger-zone">
@@ -535,7 +473,7 @@ function getStore() {
 
 function defaultStore() {
   return {
-    settings: { tdee: 2650, targetWeekday: 1250, targetWeekend: 1750, goalWeight: null, startDate: todayStr(), weeks: 12, secStart: null, secEnd: null, secTargetWeekday: null, secTargetWeekend: null, calManualStart: null },
+    settings: { tdee: 2650, targetWeekday: 1250, targetWeekend: 1750, graphStart: addDays(todayStr(), -28), graphWeeks: 12, calStart: addDays(todayStr(), -28), calWeeks: 26 },
     days: {}
   };
 }
@@ -585,87 +523,118 @@ function dayTotal(day) { return day.foods.reduce((sum, f) => sum + (f.cal || 0),
 
 function getTargetForDate(dateStr) {
   const d = parseDate(dateStr);
-  const dow = d.getDay();
-  const isWeekend = (dow === 0 || dow === 6);
+  const isWeekend = (d.getDay() === 0 || d.getDay() === 6);
   const s = store.settings;
-  // Secondary interval override: within [secStart, secEnd], use interval targets
-  if (s.secStart && s.secEnd && dateStr >= s.secStart && dateStr <= s.secEnd) {
-    if (isWeekend && s.secTargetWeekend) return s.secTargetWeekend;
-    if (!isWeekend && s.secTargetWeekday) return s.secTargetWeekday;
-  }
   return isWeekend ? (s.targetWeekend || 1750) : (s.targetWeekday || 1250);
 }
 
-function getEffectiveCals(dateStr) {
-  const day = store.days[dateStr];
-  if (day && day.foods.length > 0) return dayTotal(day);
-  if (dateStr === todayStr()) return 0;
-  if (dateStr < todayStr()) return 6666;
-  return getTargetForDate(dateStr);
+function getTDEE() { return store.settings.tdee || 2650; }
+
+// ------------------------------------------------------------
+// DISPLAY RANGES — pure windowing, never affects calculation
+// ------------------------------------------------------------
+function graphStart() { return store.settings.graphStart || addDays(todayStr(), -28); }
+function graphWeeks() { return store.settings.graphWeeks || 12; }
+function graphEnd() { return addDays(graphStart(), graphWeeks() * 7 - 1); }
+
+function calStart() { return store.settings.calStart || addDays(todayStr(), -28); }
+function calWeeks() { return store.settings.calWeeks || 26; }
+function calEnd() { return addDays(calStart(), calWeeks() * 7 - 1); }
+
+function dateRange(start, end) {
+  const out = [];
+  let cur = start;
+  while (cur <= end) { out.push(cur); cur = addDays(cur, 1); }
+  return out;
 }
 
-// Display range helpers — ONLY for graph/calendar views
-function getDisplayStartDate() { return store.settings.startDate || todayStr(); }
-function getDisplayEndDate() {
-  return addDays(getDisplayStartDate(), (store.settings.weeks || 12) * 7);
-}
-function getDisplayDateRange() {
-  const dates = [];
-  let cur = getDisplayStartDate();
-  const end = getDisplayEndDate();
-  while (cur <= end) { dates.push(cur); cur = addDays(cur, 1); }
-  return dates;
-}
-
-// Build weight map from ALL stored data (independent of display range)
-function buildFullWeightMap() {
-  const allStoredDates = Object.keys(store.days).sort();
+// ------------------------------------------------------------
+// DAY MODEL — one background calculation, shared by every view.
+//
+// Anchors at the nearest actual weigh-in at or before the earlier of the
+// two display starts, then walks forward to the later of the two ends.
+// Because an actual weigh-in overwrites the running weight, nothing before
+// that anchor can affect anything after it, so this is exact, not an
+// approximation. Never cached — rebuilt on each render.
+// ------------------------------------------------------------
+function buildDayModel() {
   const today = todayStr();
-  const displayEnd = getDisplayEndDate();
-  const tdee = store.settings.tdee;
+  const tdee = getTDEE();
 
-  // Earliest: first stored day
-  // Latest: whichever is later — display end or today
-  if (allStoredDates.length === 0) return {};
-  let earliest = allStoredDates[0];
-  let latest = displayEnd > today ? displayEnd : today;
-  // Also include the last stored date if it's beyond latest
-  const lastStored = allStoredDates[allStoredDates.length - 1];
-  if (lastStored > latest) latest = lastStored;
+  const gS = graphStart(), gE = graphEnd();
+  const cS = calStart(), cE = calEnd();
+  const displayMin = gS < cS ? gS : cS;
+  const displayMax = gE > cE ? gE : cE;
 
-  const dates = [];
-  let cur = earliest;
-  while (cur <= latest) { dates.push(cur); cur = addDays(cur, 1); }
+  // Nearest actual weigh-in at or before displayMin; if none exists, the
+  // chain simply stays empty until the first weigh-in inside the window.
+  const weighIns = Object.keys(store.days).filter(d => store.days[d] && store.days[d].weight).sort();
+  let anchor = null;
+  for (let i = weighIns.length - 1; i >= 0; i--) {
+    if (weighIns[i] <= displayMin) { anchor = weighIns[i]; break; }
+  }
 
-  const weightMap = {};
+  const modelStart = (anchor && anchor < displayMin) ? anchor : displayMin;
+  const dates = dateRange(modelStart, displayMax);
+
+  const model = {};
   let currentWeight = null;
   let prevEaten = null;
 
   dates.forEach(d => {
     const day = store.days[d];
     const isFuture = d > today;
+    const isToday = d === today;
+    const isPast = d < today;
+    const logged = !!(day && day.foods && day.foods.length > 0);
+    const eaten = logged ? dayTotal(day) : null;
+    const target = getTargetForDate(d);
 
+    let weight = null;
     if (day && day.weight) {
       currentWeight = day.weight;
-      weightMap[d] = { w: currentWeight, type: 'actual' };
+      weight = { w: currentWeight, type: 'actual' };
     } else if (currentWeight !== null && prevEaten !== null) {
-      const deficit = tdee - prevEaten;
-      currentWeight -= deficit / 3500;
-      weightMap[d] = { w: currentWeight, type: isFuture ? 'projected' : 'calculated' };
+      currentWeight -= (tdee - prevEaten) / 3500;
+      weight = { w: currentWeight, type: isFuture ? 'projected' : 'calculated' };
     }
 
-    if (isFuture) {
-      prevEaten = getTargetForDate(d);
-    } else if (day && day.foods.length > 0) {
-      prevEaten = dayTotal(day);
-    } else if (d === today) {
-      prevEaten = getTargetForDate(d);
-    } else {
-      prevEaten = 6666;
-    }
+    model[d] = {
+      date: d, isPast, isToday, isFuture,
+      logged, eaten, target,
+      penalty: isPast && !logged,
+      weight,
+      drinks: !!(day && day.drinks === true)
+    };
+
+    // Seed for tomorrow. An unlogged past day is assumed to be maintenance,
+    // so the weight chain holds flat rather than drifting.
+    if (isFuture) prevEaten = target;
+    else if (logged) prevEaten = eaten;
+    else if (isToday) prevEaten = target;
+    else prevEaten = tdee;
   });
 
-  return weightMap;
+  return model;
+}
+
+// Display-side colour decision, shared by the calendar and the bar chart.
+function statusFor(rec) {
+  if (!rec) return 'empty';
+  if (rec.isFuture) return 'future';
+  if (rec.penalty) return 'penalty';
+  if (!rec.logged) return 'future';        // today, nothing entered yet
+  if (rec.eaten <= rec.target) return 'good';
+  if (rec.eaten <= getTDEE()) return 'warn';
+  return 'bad';
+}
+
+// Calorie value a day contributes to the bar chart.
+function barValueFor(rec) {
+  if (rec.isFuture) return 0;
+  if (rec.logged) return rec.eaten;
+  if (rec.penalty) return getTDEE();
+  return 0;                                 // today, nothing entered yet
 }
 
 // ============================================================
@@ -677,7 +646,7 @@ let currentDate = todayStr();
 // ============================================================
 // TAB NAVIGATION
 // ============================================================
-const tabOrder = ['day', 'graph', 'calendar', 'longterm', 'settings'];
+const tabOrder = ['day', 'graph', 'calendar', 'settings'];
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -692,7 +661,6 @@ function switchToTab(tab) {
   document.getElementById('panel-' + tab).classList.add('active');
   if (tab === 'graph') renderGraphs();
   if (tab === 'calendar') renderCalendar();
-  if (tab === 'longterm') renderLongTerm();
   if (tab === 'settings') loadSettings();
   if (tab === 'day') renderDay();
 }
@@ -709,7 +677,6 @@ function switchToTab(tab) {
     const dy = e.changedTouches[0].clientY - touchStartY;
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 2) {
       const currentTab = document.querySelector('.tab-btn.active').dataset.tab;
-      if (currentTab === 'longterm') return; // Long Term owns horizontal swipes (year navigation)
       const idx = tabOrder.indexOf(currentTab);
       if (dx < 0 && idx < tabOrder.length - 1) switchToTab(tabOrder[idx + 1]);
       if (dx > 0 && idx > 0) switchToTab(tabOrder[idx - 1]);
@@ -922,30 +889,26 @@ function renderCalendar() {
   const container = document.getElementById('calendar-grid');
   container.innerHTML = '';
   const today = todayStr();
-  const todayD = parseDate(today);
-  const tdee = store.settings.tdee;
+  const startDate = calStart();
+  const endDate = calEnd();
+  const model = buildDayModel();
 
-  // Calendar always spans 2 months back and 6 months forward from today
-  const monthsBack = 2;
-  const monthsForward = 6;
-  const calStartD = new Date(todayD.getFullYear(), todayD.getMonth() - monthsBack, 1);
-  const calEndD = new Date(todayD.getFullYear(), todayD.getMonth() + monthsForward + 1, 0);
-  let startDate = `${calStartD.getFullYear()}-${String(calStartD.getMonth()+1).padStart(2,'0')}-01`;
-  const endDate = `${calEndD.getFullYear()}-${String(calEndD.getMonth()+1).padStart(2,'0')}-${String(calEndD.getDate()).padStart(2,'0')}`;
-  // Manual floor: never show dates before calManualStart
-  const manualStart = store.settings.calManualStart;
-  if (manualStart && manualStart > startDate) startDate = manualStart;
-
-  // Weight map from FULL history
-  const weightMap = buildFullWeightMap();
-
-  const months = [];
-  const [msY, msM] = startDate.split('-').map(Number);
-  let cur = new Date(msY, msM - 1, 1);
-  while (cur <= calEndD) { months.push({ year: cur.getFullYear(), month: cur.getMonth() }); cur.setMonth(cur.getMonth() + 1); }
+  document.getElementById('calendar-range-label').textContent =
+    formatDate(startDate) + ' \u2192 ' + formatDate(endDate) + ' (' + calWeeks() + ' weeks)';
 
   const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const dowLabels = ['Mo','Tu','We','Th','Fr','Sa','Su'];
+
+  // Month grids spanning the window; cells outside it stay blank.
+  const [sY, sM] = startDate.split('-').map(Number);
+  const [eY, eM] = endDate.split('-').map(Number);
+  const months = [];
+  let cur = new Date(sY, sM - 1, 1);
+  const lastMonth = new Date(eY, eM - 1, 1);
+  while (cur <= lastMonth) {
+    months.push({ year: cur.getFullYear(), month: cur.getMonth() });
+    cur.setMonth(cur.getMonth() + 1);
+  }
 
   months.forEach(m => {
     const header = document.createElement('div');
@@ -957,6 +920,7 @@ function renderCalendar() {
     grid.className = 'cal-grid';
     dowLabels.forEach(d => { const dow = document.createElement('div'); dow.className = 'cal-dow'; dow.textContent = d; grid.appendChild(dow); });
 
+    // Monday-first: shift JS Sunday-based day index back by one.
     const firstDay = (new Date(m.year, m.month, 1).getDay() + 6) % 7;
     for (let i = 0; i < firstDay; i++) { const empty = document.createElement('div'); empty.className = 'cal-cell empty'; grid.appendChild(empty); }
 
@@ -964,45 +928,32 @@ function renderCalendar() {
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${m.year}-${String(m.month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       const cell = document.createElement('div');
-      cell.className = 'cal-cell';
 
       if (dateStr < startDate || dateStr > endDate) {
         cell.className = 'cal-cell empty';
         grid.appendChild(cell); continue;
       }
 
-      const day = store.days[dateStr];
-      const target = getTargetForDate(dateStr);
-      const isToday = dateStr === today;
-      const isFuture = dateStr > today;
+      cell.className = 'cal-cell';
+      const rec = model[dateStr];
+      if (!rec) { grid.appendChild(cell); continue; }
 
-      if (isToday) cell.classList.add('today-cell');
+      if (rec.isToday) cell.classList.add('today-cell');
+      cell.classList.add(statusFor(rec));
 
-      if (isFuture) {
-        cell.classList.add('future');
-        let html = `<span class="cal-day-num">${d}</span>`;
-        if (weightMap[dateStr]) html += `<span class="cal-weight projected">${weightMap[dateStr].w.toFixed(1)}</span>`;
-        cell.innerHTML = html;
-      } else {
-        const cals = getEffectiveCals(dateStr);
-        const isPenalty = (!day || day.foods.length === 0) && cals === 6666;
-        const threeColor = store.settings.colorMode === 'three';
-
-        if (isPenalty) cell.classList.add('penalty');
-        else if (isToday && (!day || day.foods.length === 0)) cell.classList.add('future');
-        else if (cals <= target) cell.classList.add('good');
-        else if (threeColor && cals <= tdee) cell.classList.add('warn');
-        else cell.classList.add('bad');
-
-        cell.innerHTML = `<span class="cal-day-num">${d}</span><span class="cal-day-cals">${cals >= 6666 ? '!' : (isToday && cals === 0 ? '...' : cals)}</span>`;
-        if (day && day.drinks === true) cell.innerHTML += '<span class="cal-drink">\uD83C\uDF7A</span>';
-        if (weightMap[dateStr]) {
-          const wInfo = weightMap[dateStr];
-          cell.innerHTML += `<span class="cal-weight ${wInfo.type}">${wInfo.w.toFixed(1)}</span>`;
-        }
+      let html = `<span class="cal-day-num">${d}</span>`;
+      if (!rec.isFuture) {
+        let calText;
+        if (rec.penalty) calText = '!';
+        else if (rec.logged) calText = rec.eaten;
+        else calText = '...';
+        html += `<span class="cal-day-cals">${calText}</span>`;
       }
+      cell.innerHTML = html;
 
-      // Tap opens weight modal
+      if (rec.drinks) cell.innerHTML += '<span class="cal-drink">\uD83C\uDF7A</span>';
+      if (rec.weight) cell.innerHTML += `<span class="cal-weight ${rec.weight.type}">${rec.weight.w.toFixed(1)}</span>`;
+
       cell.addEventListener('click', () => openWeightModal(dateStr));
       grid.appendChild(cell);
     }
@@ -1014,28 +965,17 @@ function renderCalendar() {
 // GRAPHS
 // ============================================================
 function renderGraphs() {
-  const start = getDisplayStartDate();
-  const end = getDisplayEndDate();
-  document.getElementById('graph-range-label').textContent = formatDate(start) + ' \u2192 ' + formatDate(end) + ' (' + (store.settings.weeks || 12) + ' weeks)';
-  document.getElementById('toggle-projection').textContent = store.settings.hideProjection ? 'Projection: Off' : 'Projection: On';
-  document.getElementById('toggle-trend').textContent = store.settings.showTrend ? 'Trend: On' : 'Trend: Off';
-  document.getElementById('trend-legend').style.display = store.settings.showTrend ? 'flex' : 'none';
-  drawWeightChart();
-  drawCalorieChart();
-  renderCalculatedTDEE();
+  const start = graphStart(), end = graphEnd();
+  document.getElementById('graph-range-label').textContent =
+    formatDate(start) + ' \u2192 ' + formatDate(end) + ' (' + graphWeeks() + ' weeks)';
+  // Built once per render and shared by both charts.
+  const model = buildDayModel();
+  const dates = dateRange(start, end);
+  drawWeightChart(model, dates);
+  drawCalorieChart(model, dates);
 }
 
-document.getElementById('toggle-projection').addEventListener('click', () => {
-  store.settings.hideProjection = !store.settings.hideProjection;
-  saveStore(store); renderGraphs();
-});
-
-document.getElementById('toggle-trend').addEventListener('click', () => {
-  store.settings.showTrend = !store.settings.showTrend;
-  saveStore(store); renderGraphs();
-});
-
-function drawWeightChart() {
+function drawWeightChart(model, dates) {
   const canvas = document.getElementById('weight-chart');
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
@@ -1044,27 +984,24 @@ function drawWeightChart() {
   ctx.scale(dpr, dpr);
   const W = canvas.offsetWidth, H = 250;
   ctx.clearRect(0, 0, W, H);
-
-  const dates = getDisplayDateRange();
   if (dates.length < 2) return;
 
-  // Full weight map, then slice to display range
-  const weightMap = buildFullWeightMap();
   const calcWeights = [];
   dates.forEach((d, i) => {
-    if (weightMap[d]) calcWeights.push({ idx: i, w: weightMap[d].w, date: d, isActual: weightMap[d].type === 'actual' });
+    const rec = model[d];
+    if (rec && rec.weight) calcWeights.push({ idx: i, w: rec.weight.w, date: d, isActual: rec.weight.type === 'actual' });
   });
 
   const today = todayStr();
   const pastWeights = calcWeights.filter(p => p.date <= today);
   const futureWeights = calcWeights.filter(p => p.date > today);
-  const showProjection = !store.settings.hideProjection;
-  const settings = store.settings;
 
-  let allW = pastWeights.map(p => p.w);
-  if (showProjection) allW = allW.concat(futureWeights.map(p => p.w));
-  if (settings.goalWeight) allW.push(settings.goalWeight);
-  if (allW.length === 0) return;
+  const allW = calcWeights.map(p => p.w);
+  if (allW.length === 0) {
+    ctx.fillStyle = '#555e70'; ctx.font = '13px JetBrains Mono'; ctx.textAlign = 'center';
+    ctx.fillText('No weight data in this range', W / 2, H / 2);
+    return;
+  }
   let minW = Math.floor(Math.min(...allW) - 2);
   let maxW = Math.ceil(Math.max(...allW) + 2);
   if (maxW - minW < 5) { minW -= 3; maxW += 3; }
@@ -1091,16 +1028,8 @@ function drawWeightChart() {
     }
   });
 
-  if (settings.goalWeight) {
-    const gy = yScale(settings.goalWeight);
-    ctx.strokeStyle = 'rgba(240,192,64,0.3)'; ctx.setLineDash([4, 4]);
-    ctx.beginPath(); ctx.moveTo(pad.l, gy); ctx.lineTo(W - pad.r, gy); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = '#f0c040'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'left';
-    ctx.fillText('goal ' + settings.goalWeight, pad.l + 4, gy - 6);
-  }
-
-  if (showProjection && futureWeights.length > 0) {
+  // Projection is always drawn.
+  if (futureWeights.length > 0) {
     ctx.strokeStyle = '#4ecca3'; ctx.lineWidth = 2; ctx.setLineDash([6, 3]);
     ctx.beginPath();
     if (pastWeights.length > 0) { const lp = pastWeights[pastWeights.length - 1]; ctx.moveTo(xScale(lp.idx), yScale(lp.w)); }
@@ -1128,27 +1057,10 @@ function drawWeightChart() {
         ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 1.5; ctx.stroke();
       }
     });
-
-    // Trend line (linear regression on ACTUAL weigh-ins only within displayed range)
-    const actualPastWeights = pastWeights.filter(p => p.isActual);
-    if (store.settings.showTrend && actualPastWeights.length >= 2) {
-      const n = actualPastWeights.length;
-      const sumX = actualPastWeights.reduce((s, p) => s + p.idx, 0);
-      const sumY = actualPastWeights.reduce((s, p) => s + p.w, 0);
-      const sumXY = actualPastWeights.reduce((s, p) => s + p.idx * p.w, 0);
-      const sumX2 = actualPastWeights.reduce((s, p) => s + p.idx * p.idx, 0);
-      const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-      const intercept = (sumY - slope * sumX) / n;
-      const startIdx = 0, endIdx = dates.length - 1;
-      const y1 = yScale(slope * startIdx + intercept), y2 = yScale(slope * endIdx + intercept);
-      ctx.strokeStyle = 'rgba(240,192,64,0.5)'; ctx.lineWidth = 1.5; ctx.setLineDash([8, 4]);
-      ctx.beginPath(); ctx.moveTo(xScale(startIdx), y1); ctx.lineTo(xScale(endIdx), y2); ctx.stroke();
-      ctx.setLineDash([]);
-    }
   }
 }
 
-function drawCalorieChart() {
+function drawCalorieChart(model, dates) {
   const canvas = document.getElementById('calorie-chart');
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
@@ -1157,14 +1069,21 @@ function drawCalorieChart() {
   ctx.scale(dpr, dpr);
   const W = canvas.offsetWidth, H = 200;
   ctx.clearRect(0, 0, W, H);
-
-  const dates = getDisplayDateRange();
   if (dates.length < 2) return;
-  const today = todayStr();
 
-  const cals = dates.map(d => d <= today ? getEffectiveCals(d) : 0);
-  const targets = dates.map(d => getTargetForDate(d));
-  const maxC = Math.max(...targets.map(t => t * 1.3), ...cals.filter(c => c < 6666), 500);
+  const today = todayStr();
+  const tdee = getTDEE();
+  const recs = dates.map(d => model[d]).filter(Boolean);
+  if (recs.length === 0) return;
+
+  const values = dates.map(d => model[d] ? barValueFor(model[d]) : 0);
+  const targets = dates.map(d => model[d] ? model[d].target : getTargetForDate(d));
+  const hasPenalty = recs.some(r => r.penalty);
+
+  // Unlogged days draw at TDEE, so the axis has to reach it when any are shown.
+  let maxC = Math.max(...targets.map(t => t * 1.3), ...values, 500);
+  if (hasPenalty) maxC = Math.max(maxC, tdee * 1.05);
+
   const pad = { t: 15, b: 30, l: 45, r: 15 };
   const gW = W - pad.l - pad.r, gH = H - pad.t - pad.b;
   const barW = Math.max(2, (gW / dates.length) - 2);
@@ -1178,8 +1097,8 @@ function drawCalorieChart() {
     ctx.fillText(c + '', pad.l - 6, y + 4);
   }
 
-  const wdTarget = store.settings.targetWeekday || 1500;
-  const weTarget = store.settings.targetWeekend || 1800;
+  const wdTarget = store.settings.targetWeekday || 1250;
+  const weTarget = store.settings.targetWeekend || 1750;
   [wdTarget, weTarget].forEach((t, ti) => {
     if (t > 0 && t <= maxC) {
       const ty = pad.t + (1 - t / maxC) * gH;
@@ -1191,29 +1110,25 @@ function drawCalorieChart() {
     }
   });
 
-  const threeColor = store.settings.colorMode === 'three';
-  const tdeeVal = store.settings.tdee;
-
   dates.forEach((d, i) => {
-    const c = cals[i];
-    if (c === 0 && d !== today) return;
-    const target = targets[i];
-    const cappedC = Math.min(c === 0 ? 0 : c, maxC);
+    const rec = model[d];
+    if (!rec || rec.isFuture) return;
+    const v = values[i];
+    if (v === 0 && !rec.isToday) return;
+
+    const status = statusFor(rec);
     const x = pad.l + (i / dates.length) * gW + 1;
-    const isToday = d === today;
-    const thisBarW = isToday ? Math.max(barW * 4, 12) : barW;
-    const h = cappedC > 0 ? (cappedC / maxC) * gH : 4;
+    const thisBarW = rec.isToday ? Math.max(barW * 4, 12) : barW;
+    const h = v > 0 ? (Math.min(v, maxC) / maxC) * gH : 4;
     const y = pad.t + gH - h;
 
-    if (c >= 6666) ctx.fillStyle = 'rgba(155,89,182,0.7)';
-    else if (c <= target) ctx.fillStyle = 'rgba(78,204,163,0.7)';
-    else if (threeColor && c <= tdeeVal) ctx.fillStyle = 'rgba(240,192,64,0.7)';
-    else if (c > target) ctx.fillStyle = 'rgba(233,69,96,0.7)';
+    if (status === 'penalty') ctx.fillStyle = 'rgba(155,89,182,0.7)';
+    else if (status === 'good') ctx.fillStyle = 'rgba(78,204,163,0.7)';
+    else if (status === 'warn') ctx.fillStyle = 'rgba(240,192,64,0.7)';
+    else if (status === 'bad') ctx.fillStyle = 'rgba(233,69,96,0.7)';
     else ctx.fillStyle = 'rgba(78,204,163,0.3)';
 
-    if (isToday) {
-      ctx.fillStyle = ctx.fillStyle.replace('0.7', '0.9').replace('0.3', '0.6');
-    }
+    if (rec.isToday) ctx.fillStyle = ctx.fillStyle.replace('0.7', '0.9').replace('0.3', '0.6');
     ctx.beginPath(); ctx.roundRect(x, y, thisBarW, h, [3, 3, 0, 0]); ctx.fill();
   });
 
@@ -1229,94 +1144,6 @@ function drawCalorieChart() {
 }
 
 // ============================================================
-// CALCULATED TDEE
-// ============================================================
-function renderCalculatedTDEE() {
-  const el = document.getElementById('calculated-tdee-box');
-  const dates = getDisplayDateRange();
-  const today = todayStr();
-
-  // Find pairs of actual weigh-ins within the displayed range that have logged calories between them
-  const weighIns = [];
-  dates.forEach(d => {
-    if (d > today) return;
-    const day = store.days[d];
-    if (day && day.weight) weighIns.push({ date: d, weight: day.weight });
-  });
-
-  if (weighIns.length < 2) {
-    el.innerHTML = '<div style="font-weight:700;margin-bottom:6px;color:var(--text);font-size:14px;">Calculated TDEE</div><div>Need at least 2 weigh-ins in the displayed range to calculate.</div>';
-    return;
-  }
-
-  // For each pair of consecutive weigh-ins, compute TDEE:
-  // weight_change_lbs * 3500 = total_surplus over the period
-  // total_calories_eaten - TDEE * num_days = weight_change * 3500
-  // So TDEE = (total_calories_eaten - weight_change * 3500) / num_days
-  let totalCalories = 0;
-  let totalDays = 0;
-  let totalWeightChange = 0;
-  let usablePairs = 0;
-
-  for (let i = 0; i < weighIns.length - 1; i++) {
-    const w1 = weighIns[i], w2 = weighIns[i + 1];
-    // Count days and sum calories between them (only if all days have logged food)
-    let cur = addDays(w1.date, 1);
-    let pairCals = 0;
-    let pairDays = 0;
-    let allLogged = true;
-    // Include the first weigh-in day's calories too
-    const day0 = store.days[w1.date];
-    if (day0 && day0.foods && day0.foods.length > 0) {
-      pairCals += dayTotal(day0);
-      pairDays++;
-    } else {
-      allLogged = false;
-    }
-    while (cur < w2.date) {
-      const day = store.days[cur];
-      if (!day || !day.foods || day.foods.length === 0) { allLogged = false; break; }
-      pairCals += dayTotal(day);
-      pairDays++;
-      cur = addDays(cur, 1);
-    }
-    // Include the last weigh-in day's calories
-    if (allLogged) {
-      const dayLast = store.days[w2.date];
-      if (dayLast && dayLast.foods && dayLast.foods.length > 0) {
-        pairCals += dayTotal(dayLast);
-        pairDays++;
-      }
-    }
-    if (!allLogged || pairDays === 0) continue;
-    const wChange = w2.weight - w1.weight;
-    totalCalories += pairCals;
-    totalDays += pairDays;
-    totalWeightChange += wChange;
-    usablePairs++;
-  }
-
-  if (usablePairs === 0 || totalDays === 0) {
-    el.innerHTML = '<div style="font-weight:700;margin-bottom:6px;color:var(--text);font-size:14px;">Calculated TDEE</div><div>Need consecutive weigh-ins with all days logged between them.</div>';
-    return;
-  }
-
-  // TDEE = (total_calories - weight_change_lbs * 3500) / total_days
-  const calcTDEE = Math.round((totalCalories - totalWeightChange * 3500) / totalDays);
-  const diff = calcTDEE - (store.settings.tdee || 2650);
-  const diffSign = diff >= 0 ? '+' : '';
-  const diffColor = Math.abs(diff) < 100 ? 'var(--green)' : 'var(--yellow)';
-
-  el.innerHTML = `
-    <div style="font-weight:700;margin-bottom:8px;color:var(--text);font-size:14px;">Calculated TDEE</div>
-    <div style="font-size:22px;font-weight:700;color:var(--accent2);margin-bottom:6px;">${calcTDEE.toLocaleString()} cal/day</div>
-    <div style="margin-bottom:4px;">Based on ${usablePairs} weigh-in pair${usablePairs > 1 ? 's' : ''} over ${totalDays} logged days</div>
-    <div style="margin-bottom:4px;">Weight change: <span style="color:${totalWeightChange <= 0 ? 'var(--green)' : 'var(--accent)'};">${totalWeightChange >= 0 ? '+' : ''}${totalWeightChange.toFixed(1)} lbs</span></div>
-    <div>vs. your setting (${store.settings.tdee}): <span style="color:${diffColor};">${diffSign}${diff} cal/day</span></div>
-  `;
-}
-
-// ============================================================
 // SETTINGS
 // ============================================================
 function loadSettings() {
@@ -1324,32 +1151,29 @@ function loadSettings() {
   document.getElementById('set-tdee').value = s.tdee || '';
   document.getElementById('set-target-weekday').value = s.targetWeekday || '';
   document.getElementById('set-target-weekend').value = s.targetWeekend || '';
-  document.getElementById('set-goal-weight').value = s.goalWeight || '';
-  document.getElementById('set-start-date').value = s.startDate || '';
-  document.getElementById('set-weeks').value = s.weeks || 12;
-  document.getElementById('set-color-mode').value = s.colorMode || 'two';
-  document.getElementById('set-cal-manual-start').value = s.calManualStart || '';
-  document.getElementById('set-sec-start').value = s.secStart || '';
-  document.getElementById('set-sec-end').value = s.secEnd || '';
-  document.getElementById('set-sec-weekday').value = s.secTargetWeekday || '';
-  document.getElementById('set-sec-weekend').value = s.secTargetWeekend || '';
+  document.getElementById('set-graph-start').value = graphStart();
+  document.getElementById('set-graph-weeks').value = graphWeeks();
+  document.getElementById('set-cal-start').value = calStart();
+  document.getElementById('set-cal-weeks').value = calWeeks();
   updateWeeklyProjection();
+}
+
+function clampWeeks(v, fallback) {
+  const n = parseInt(v);
+  if (!n || n < 1) return fallback;
+  return Math.min(n, 104);
 }
 
 document.getElementById('save-settings-btn').addEventListener('click', () => {
   store.settings.tdee = parseInt(document.getElementById('set-tdee').value) || store.settings.tdee;
   store.settings.targetWeekday = parseInt(document.getElementById('set-target-weekday').value) || 1250;
   store.settings.targetWeekend = parseInt(document.getElementById('set-target-weekend').value) || 1750;
-  store.settings.goalWeight = parseFloat(document.getElementById('set-goal-weight').value) || null;
-  store.settings.startDate = document.getElementById('set-start-date').value || todayStr();
-  store.settings.weeks = parseInt(document.getElementById('set-weeks').value) || 12;
-  store.settings.colorMode = document.getElementById('set-color-mode').value || 'two';
-  store.settings.calManualStart = document.getElementById('set-cal-manual-start').value || null;
-  store.settings.secStart = document.getElementById('set-sec-start').value || null;
-  store.settings.secEnd = document.getElementById('set-sec-end').value || null;
-  store.settings.secTargetWeekday = parseInt(document.getElementById('set-sec-weekday').value) || null;
-  store.settings.secTargetWeekend = parseInt(document.getElementById('set-sec-weekend').value) || null;
-  saveStore(store); showToast('Settings saved'); renderDay(); updateWeeklyProjection();
+  store.settings.graphStart = document.getElementById('set-graph-start').value || addDays(todayStr(), -28);
+  store.settings.graphWeeks = clampWeeks(document.getElementById('set-graph-weeks').value, 12);
+  store.settings.calStart = document.getElementById('set-cal-start').value || addDays(todayStr(), -28);
+  store.settings.calWeeks = clampWeeks(document.getElementById('set-cal-weeks').value, 26);
+  saveStore(store); showToast('Settings saved');
+  loadSettings(); renderDay();
 });
 
 function updateWeeklyProjection() {
@@ -1364,15 +1188,6 @@ function updateWeeklyProjection() {
   let msg = `Weekly: 5\u00D7${wd} + 2\u00D7${we} = ${wd*5 + we*2} cal/wk`;
   msg += `<br>Deficit: ${weeklyDeficit.toLocaleString()} cal/wk`;
   msg += `<br><span style="color:${weeklyLbs >= 0 ? 'var(--green)' : 'var(--accent)'}; font-size:16px; font-weight:700;">${sign}${abs} lbs/week</span>`;
-  if (store.settings.goalWeight && weeklyLbs > 0) {
-    const allDates = Object.keys(store.days).sort();
-    let lastW = null;
-    for (let i = allDates.length - 1; i >= 0; i--) { if (store.days[allDates[i]].weight) { lastW = store.days[allDates[i]].weight; break; } }
-    if (lastW) {
-      const toLose = lastW - store.settings.goalWeight;
-      if (toLose > 0) { const weeks = toLose / weeklyLbs; msg += `<br><span style="font-size:11px;">~${Math.round(weeks)} weeks to goal (from ${lastW} lbs)</span>`; }
-    }
-  }
   el.innerHTML = msg;
 }
 
@@ -1428,158 +1243,6 @@ document.getElementById('clear-btn').addEventListener('click', () => {
     store = defaultStore(); saveStore(store); showToast('All data cleared'); renderDay(); loadSettings();
   }
 });
-
-// ============================================================
-// LONG TERM WEIGHT CHART
-// ============================================================
-let ltYear = new Date().getFullYear();
-
-function getLTYearRange() {
-  const allDates = Object.keys(store.days).filter(d => store.days[d].weight).sort();
-  if (allDates.length === 0) return { min: ltYear, max: ltYear };
-  return { min: parseInt(allDates[0].split('-')[0]), max: parseInt(allDates[allDates.length - 1].split('-')[0]) };
-}
-
-document.getElementById('lt-prev').addEventListener('click', () => { const r = getLTYearRange(); if (ltYear > r.min) { ltYear--; renderLongTerm(); } });
-document.getElementById('lt-next').addEventListener('click', () => { const r = getLTYearRange(); if (ltYear < r.max) { ltYear++; renderLongTerm(); } });
-
-(function() {
-  const panel = document.getElementById('panel-longterm');
-  let touchStartX = 0, touchStartY = 0;
-  panel.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, { passive: true });
-  panel.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - touchStartX, dy = e.changedTouches[0].clientY - touchStartY;
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-      const r = getLTYearRange();
-      if (dx > 0 && ltYear > r.min) { ltYear--; renderLongTerm(); }
-      if (dx < 0 && ltYear < r.max) { ltYear++; renderLongTerm(); }
-    }
-  }, { passive: true });
-})();
-
-function renderLongTerm() {
-  document.getElementById('lt-year-label').textContent = ltYear;
-  const yearStr = String(ltYear);
-  const points = [];
-  const allDates = Object.keys(store.days).sort();
-  allDates.forEach(d => { if (!d.startsWith(yearStr + '-')) return; const day = store.days[d]; if (!day.weight) return; points.push({ date: d, weight: day.weight }); });
-
-  const range = getLTYearRange();
-  document.getElementById('lt-prev').style.opacity = ltYear > range.min ? '1' : '0.3';
-  document.getElementById('lt-next').style.opacity = ltYear < range.max ? '1' : '0.3';
-
-  const statsEl = document.getElementById('lt-stats');
-  if (points.length === 0) {
-    statsEl.innerHTML = 'No weight data for ' + ltYear;
-    const ctx2 = document.getElementById('lt-chart').getContext('2d'); ctx2.clearRect(0, 0, ctx2.canvas.width, ctx2.canvas.height);
-    document.getElementById('lt-all-time-stats').innerHTML = ''; return;
-  }
-
-  const weights = points.map(p => p.weight);
-  const minW = Math.min(...weights), maxW = Math.max(...weights);
-  const minP = points.find(p => p.weight === minW), maxP = points.find(p => p.weight === maxW);
-  const avgW = (weights.reduce((a, b) => a + b, 0) / weights.length).toFixed(1);
-  const startW = points[0].weight, endW = points[points.length - 1].weight;
-  const change = endW - startW;
-
-  statsEl.innerHTML = `
-    <div style="font-weight:700;margin-bottom:8px;color:var(--text);font-size:14px;">${ltYear} Summary</div>
-    <div style="margin-bottom:4px;"><span style="color:#4ecca3;">\u25BC Low:</span> ${minW} lbs <span style="color:var(--text-faint);">(${formatDate(minP.date)})</span></div>
-    <div style="margin-bottom:4px;"><span style="color:#e94560;">\u25B2 High:</span> ${maxW} lbs <span style="color:var(--text-faint);">(${formatDate(maxP.date)})</span></div>
-    <div style="margin-bottom:4px;">Avg: ${avgW} lbs &nbsp;|&nbsp; Range: ${(maxW - minW).toFixed(1)} lbs</div>
-    <div>Change: <span style="color:${change <= 0 ? 'var(--green)' : 'var(--accent)'};font-weight:700;">${change >= 0 ? '+' : ''}${change.toFixed(1)} lbs</span> <span style="color:var(--text-faint);">(${startW} \u2192 ${endW})</span></div>
-  `;
-
-  const allWeights = [];
-  allDates.forEach(d => { const day = store.days[d]; if (day && day.weight) allWeights.push({ date: d, weight: day.weight }); });
-  if (allWeights.length > 1) {
-    const allW = allWeights.map(p => p.weight);
-    const allMin = Math.min(...allW), allMax = Math.max(...allW);
-    const allMinP = allWeights.find(p => p.weight === allMin), allMaxP = allWeights.find(p => p.weight === allMax);
-    const first = allWeights[0], last = allWeights[allWeights.length - 1];
-    const allChange = last.weight - first.weight;
-    document.getElementById('lt-all-time-stats').innerHTML = `
-      <div style="font-weight:700;margin-bottom:8px;color:var(--text);font-size:14px;">All-Time (${first.date.split('-')[0]}\u2013${last.date.split('-')[0]})</div>
-      <div style="margin-bottom:4px;"><span style="color:#4ecca3;">\u25BC Low:</span> ${allMin} lbs <span style="color:var(--text-faint);">(${formatDate(allMinP.date)})</span></div>
-      <div style="margin-bottom:4px;"><span style="color:#e94560;">\u25B2 High:</span> ${allMax} lbs <span style="color:var(--text-faint);">(${formatDate(allMaxP.date)})</span></div>
-      <div>Overall: <span style="color:${allChange <= 0 ? 'var(--green)' : 'var(--accent)'};font-weight:700;">${allChange >= 0 ? '+' : ''}${allChange.toFixed(1)} lbs</span> <span style="color:var(--text-faint);">(${first.weight} \u2192 ${last.weight})</span></div>
-    `;
-  }
-  drawLTChart(points, minP, maxP);
-}
-
-function drawLTChart(points, minPoint, maxPoint) {
-  const canvas = document.getElementById('lt-chart');
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = canvas.offsetWidth * dpr; canvas.height = 300 * dpr;
-  ctx.scale(dpr, dpr);
-  const W = canvas.offsetWidth, H = 300;
-  ctx.clearRect(0, 0, W, H);
-
-  if (points.length < 2) { ctx.fillStyle = '#555e70'; ctx.font = '14px JetBrains Mono'; ctx.textAlign = 'center'; ctx.fillText('Not enough data for ' + ltYear, W / 2, H / 2); return; }
-
-  // Use global weight range across ALL years for consistent Y-axis
-  const allWeightsGlobal = Object.keys(store.days).map(d => store.days[d].weight).filter(w => w);
-  let minW = Math.floor(Math.min(...allWeightsGlobal) - 3), maxW = Math.ceil(Math.max(...allWeightsGlobal) + 3);
-  if (maxW - minW < 10) { minW -= 5; maxW += 5; }
-
-  const pad = { t: 25, b: 35, l: 45, r: 15 };
-  const gW = W - pad.l - pad.r, gH = H - pad.t - pad.b;
-  const yearStart = new Date(ltYear, 0, 1), yearEnd = new Date(ltYear, 11, 31);
-  const yearDays = (yearEnd - yearStart) / (1000 * 60 * 60 * 24) + 1;
-  const xForDate = (d) => { const dt = parseDate(d); return pad.l + ((dt - yearStart) / (1000 * 60 * 60 * 24) / yearDays) * gW; };
-  const yScale = (w) => pad.t + (1 - (w - minW) / (maxW - minW)) * gH;
-
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
-  const step = maxW - minW > 30 ? 10 : 5;
-  for (let w = Math.ceil(minW / step) * step; w <= maxW; w += step) {
-    const y = yScale(w);
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
-    ctx.fillStyle = '#555e70'; ctx.font = '11px JetBrains Mono'; ctx.textAlign = 'right';
-    ctx.fillText(w + '', pad.l - 6, y + 4);
-  }
-
-  const monthAbbr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  monthAbbr.forEach((m, i) => {
-    const dt = new Date(ltYear, i, 15);
-    const x = pad.l + ((dt - yearStart) / (1000 * 60 * 60 * 24) / yearDays) * gW;
-    ctx.fillStyle = '#555e70'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'center';
-    ctx.fillText(m, x, H - 10);
-    const mStart = new Date(ltYear, i, 1);
-    const mx = pad.l + ((mStart - yearStart) / (1000 * 60 * 60 * 24) / yearDays) * gW;
-    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-    ctx.beginPath(); ctx.moveTo(mx, pad.t); ctx.lineTo(mx, pad.t + gH); ctx.stroke();
-  });
-
-  ctx.strokeStyle = 'rgba(233,69,96,0.8)'; ctx.lineWidth = 2.5; ctx.beginPath();
-  points.forEach((p, i) => { const x = xForDate(p.date), y = yScale(p.weight); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
-  ctx.stroke();
-  ctx.lineTo(xForDate(points[points.length - 1].date), pad.t + gH);
-  ctx.lineTo(xForDate(points[0].date), pad.t + gH); ctx.closePath();
-  const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + gH);
-  grad.addColorStop(0, 'rgba(233,69,96,0.15)'); grad.addColorStop(1, 'rgba(233,69,96,0.01)');
-  ctx.fillStyle = grad; ctx.fill();
-
-  points.forEach(p => { const x = xForDate(p.date), y = yScale(p.weight); ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fillStyle = 'rgba(233,69,96,0.6)'; ctx.fill(); });
-
-  if (minPoint) {
-    const x = xForDate(minPoint.date), y = yScale(minPoint.weight);
-    ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.fillStyle = 'rgba(78,204,163,0.2)'; ctx.fill();
-    ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fillStyle = '#4ecca3'; ctx.fill();
-    ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 2; ctx.stroke();
-    ctx.fillStyle = '#4ecca3'; ctx.font = 'bold 11px JetBrains Mono'; ctx.textAlign = 'center';
-    ctx.fillText(minPoint.weight + '', x, y > pad.t + gH / 2 ? y - 14 : y + 16);
-  }
-  if (maxPoint) {
-    const x = xForDate(maxPoint.date), y = yScale(maxPoint.weight);
-    ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.fillStyle = 'rgba(233,69,96,0.25)'; ctx.fill();
-    ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fillStyle = '#e94560'; ctx.fill();
-    ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 2; ctx.stroke();
-    ctx.fillStyle = '#e94560'; ctx.font = 'bold 11px JetBrains Mono'; ctx.textAlign = 'center';
-    ctx.fillText(maxPoint.weight + '', x, y < pad.t + gH / 2 ? y - 14 : y + 16);
-  }
-}
 
 // ============================================================
 // TOAST
