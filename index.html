@@ -274,6 +274,14 @@ input[type="date"] { -webkit-appearance: none; }
 .wk-table tr:last-child td { border-bottom: none; }
 .wk-table tr.is-latest td { background: rgba(255,255,255,0.03); }
 .wk-table tr.is-latest td:first-child { color: var(--text); font-weight: 600; }
+.wk-table tr.is-current td { background: rgba(240,192,64,0.07); }
+.wk-table tr.is-current td:first-child { color: var(--text); font-weight: 600; }
+.wk-tag {
+  display: inline-block; margin-left: 6px; font-size: 9px; font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase; color: var(--yellow);
+  vertical-align: 1px;
+}
+.wk-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
 .wk-loss { color: var(--green); }
 .wk-gain { color: var(--accent); }
 .wk-nil { color: var(--text-faint); }
@@ -438,6 +446,12 @@ input[type="date"] { -webkit-appearance: none; }
 <div class="panel" id="panel-weekly">
   <div class="panel-header">Weekly</div>
   <div class="wk-caption" id="weekly-caption"></div>
+  <div class="wk-controls" id="weekly-controls" style="display:none;">
+    <label class="proj-toggle" style="margin-left:0;">
+      <span class="lbl">Count today as logged</span>
+      <span class="switch"><input type="checkbox" id="toggle-week-today"><span class="track"></span></span>
+    </label>
+  </div>
   <div id="weekly-table"></div>
   <div id="weekly-notes"></div>
 </div>
@@ -752,7 +766,11 @@ function switchToTab(tab) {
   document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
   document.getElementById('panel-' + tab).classList.add('active');
   if (tab === 'graph') renderGraphs();
-  if (tab === 'weekly') renderWeekly();
+  if (tab === 'weekly') {
+    weekTodayActual = false;                 // never carries between visits
+    document.getElementById('toggle-week-today').checked = false;
+    renderWeekly();
+  }
   if (tab === 'calendar') renderCalendar();
   if (tab === 'settings') loadSettings();
   if (tab === 'day') renderDay();
@@ -1302,8 +1320,54 @@ function drawCalorieChart(model, dates) {
 // A row anchored on Monday M covers the seven days M-7 .. M-1, and its
 // weight change is weight(M-7) - weight(M), so positive means loss.
 // A partial week at the range start is skipped: the M-7 >= start test
-// drops it automatically. Nothing past today is shown.
+// drops it automatically.
+//
+// The week containing today is appended as an extra in-progress row. Its
+// closing Monday has not happened yet, so days that are still ahead are
+// counted at target and the closing weight is projected rather than read
+// off the scale. Everything else about the row is computed the same way.
 // ============================================================
+// Weekly-only display mode, deliberately not persisted: it resets to target
+// every time the tab is opened, so a stale toggle can never silently change
+// what the numbers mean days later.
+let weekTodayActual = false;
+
+// Calories a single day contributes to a weekly row.
+//   past    — what was logged, or TDEE if it was never logged (the penalty
+//             rule used everywhere else in the app)
+//   today   — target, or what is actually logged so far when toggled
+//   future  — target, matching how buildDayModel() projects weight forward
+// For a completed week every day is past, so this reduces to the original
+// behaviour exactly.
+function weekIntakeForDay(d, rec, today, tdee) {
+  if (d < today) {
+    if (rec && rec.logged) return rec.eaten;
+    return tdee;
+  }
+  const target = rec ? rec.target : getTargetForDate(d);
+  if (d === today) {
+    if (!weekTodayActual) return target;
+    return (rec && rec.logged) ? rec.eaten : 0;
+  }
+  return target;
+}
+
+// Weight at the closing Monday of an in-progress week. The shared day model
+// seeds today from whatever is logged, which would put the loss column and
+// the cal/day column on different assumptions about the same day, so the
+// chain is rebuilt here under this panel's rules. An actual weigh-in landing
+// mid-week resets it, exactly as buildDayModel() does.
+function projectedWeekEndWeight(days, model, startWeight, today, tdee) {
+  if (startWeight === null) return null;
+  let w = startWeight;
+  days.forEach(d => {
+    const rec = model[d];
+    if (rec && rec.weight && rec.weight.type === 'actual') w = rec.weight.w;
+    w -= (tdee - weekIntakeForDay(d, rec, today, tdee)) / 3500;
+  });
+  return w;
+}
+
 function buildWeeklyRows() {
   const model = buildDayModel();
   const start = graphStart(), end = graphEnd();
@@ -1317,27 +1381,42 @@ function buildWeeklyRows() {
   while (parseDate(cur).getDay() !== 1 && guard++ < 7) cur = addDays(cur, 1);
 
   const rows = [];
+  const addRow = (cur, prev, inProgress) => {
+    const days = dateRange(prev, addDays(cur, -1));
+    let intake = 0, target = 0, loggedCount = 0;
+
+    days.forEach(d => {
+      const rec = model[d];
+      target += rec ? rec.target : getTargetForDate(d);
+      if (rec && rec.logged) loggedCount++;
+      intake += weekIntakeForDay(d, rec, today, tdee);
+    });
+
+    const wStart = model[prev] && model[prev].weight ? model[prev].weight.w : null;
+    const wEnd = inProgress
+      ? projectedWeekEndWeight(days, model, wStart, today, tdee)
+      : (model[cur] && model[cur].weight ? model[cur].weight.w : null);
+    const change = (wStart !== null && wEnd !== null) ? (wStart - wEnd) : null;
+
+    rows.push({ monday: cur, prevMonday: prev, change, intake, target,
+                loggedCount, dayCount: days.length, inProgress });
+  };
+
   while (cur <= lastAllowed) {
     const prev = addDays(cur, -7);
-    if (prev >= start) {
-      const days = dateRange(prev, addDays(cur, -1));
-      let intake = 0, target = 0, loggedCount = 0;
-
-      days.forEach(d => {
-        const rec = model[d];
-        target += rec ? rec.target : getTargetForDate(d);
-        if (rec && rec.logged) { intake += rec.eaten; loggedCount++; }
-        else if (rec && rec.penalty) intake += tdee;   // unlogged past day counts as maintenance
-      });
-
-      const wStart = model[prev] && model[prev].weight ? model[prev].weight.w : null;
-      const wEnd = model[cur] && model[cur].weight ? model[cur].weight.w : null;
-      const change = (wStart !== null && wEnd !== null) ? (wStart - wEnd) : null;
-
-      rows.push({ monday: cur, prevMonday: prev, change, intake, target, loggedCount, dayCount: days.length });
-    }
+    if (prev >= start) addRow(cur, prev, false);
     cur = addDays(cur, 7);
   }
+
+  // The week today sits inside. Its closing Monday is still ahead, so the
+  // loop above cannot reach it. Only shown when today falls in the range.
+  if (today >= start && today <= end) {
+    const dow = parseDate(today).getDay();
+    const backToMonday = dow === 0 ? 6 : dow - 1;   // Sunday closes the week
+    const curStart = addDays(today, -backToMonday);
+    if (curStart >= start) addRow(addDays(curStart, 7), curStart, true);
+  }
+
   return rows;
 }
 
@@ -1372,6 +1451,10 @@ function renderWeekly() {
   capEl.innerHTML = 'Loss table \u2014 a plain number is weight lost, a + is weight gained.<br>'
     + shortDate(graphStart()) + ' \u2192 ' + shortDate(graphEnd()) + ' (' + graphWeeks() + ' weeks)';
 
+  // The toggle only means anything while a partial week is on screen.
+  const current = rows.find(r => r.inProgress);
+  document.getElementById('weekly-controls').style.display = current ? '' : 'none';
+
   if (rows.length === 0) {
     tblEl.innerHTML = '<div class="no-data">No complete weeks in this range yet.<br>The range is set on the Settings tab.</div>';
     noteEl.innerHTML = '';
@@ -1392,10 +1475,17 @@ function renderWeekly() {
     const avg = vals.length ? tot / vals.length : null;
 
     const perDay = Math.round(r.intake / r.dayCount);
-    const isLatest = i === rows.length - 1;
+    const isLatest = i === rows.length - 1 && !r.inProgress;
 
-    return '<tr' + (isLatest ? ' class="is-latest"' : '') + '>'
-      + '<td>' + shortDate(r.monday) + '</td>'
+    // The row is labelled by the Sunday that closes the week. Every figure
+    // above still keys off the Monday anchor; this is presentation only.
+    const label = shortDate(addDays(r.monday, -1))
+      + (r.inProgress ? '<span class="wk-tag">in progress</span>' : '');
+
+    const cls = r.inProgress ? ' class="is-current"' : (isLatest ? ' class="is-latest"' : '');
+
+    return '<tr' + cls + '>'
+      + '<td>' + label + '</td>'
       + '<td>' + fmtLoss(r.change) + '</td>'
       + '<td>' + fmtLoss(avg) + star + '</td>'
       + '<td>' + fmtLoss(tot) + star + '</td>'
@@ -1404,10 +1494,21 @@ function renderWeekly() {
   }).join('');
 
   tblEl.innerHTML = '<table class="wk-table"><thead><tr>'
-    + '<th>Mon</th><th>Week</th><th>4wk<br>avg</th><th>4wk<br>tot</th><th>Cal/day<br>(wk)</th>'
+    + '<th>Week<br>ending</th><th>Week</th><th>4wk<br>avg</th><th>4wk<br>tot</th><th>Cal/day<br>(wk)</th>'
     + '</tr></thead><tbody>' + body + '</tbody></table>';
 
   let notes = '';
+  if (current) {
+    const remaining = dateRange(current.prevMonday, addDays(current.monday, -1))
+      .filter(d => d > todayStr()).length;
+    notes += '<div class="wk-note"><b>Week ending ' + shortDate(addDays(current.monday, -1))
+      + ' is still in progress.</b><br>'
+      + (remaining > 0
+          ? remaining + ' remaining ' + (remaining === 1 ? 'day is' : 'days are') + ' counted at target. '
+          : '')
+      + 'Today is counted at ' + (weekTodayActual ? 'what is logged so far' : 'target')
+      + '. Both the loss and cal/day figures move as the week fills in.</div>';
+  }
   if (anyShort) {
     notes += '<div class="wk-note"><span class="wk-star">*</span> Fewer than four weeks of lookback available \u2014 '
       + 'figure runs from the range start (' + shortDate(graphStart()) + ').</div>';
@@ -1422,6 +1523,11 @@ function renderWeekly() {
   }
   noteEl.innerHTML = notes;
 }
+
+document.getElementById('toggle-week-today').addEventListener('change', (e) => {
+  weekTodayActual = e.target.checked;
+  renderWeekly();
+});
 
 // ============================================================
 // SETTINGS
