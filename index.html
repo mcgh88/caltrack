@@ -286,6 +286,39 @@ input[type="date"] { -webkit-appearance: none; }
 .wk-note .wk-star { color: var(--yellow); }
 .wk-note b { color: var(--text-dim); font-weight: 600; }
 
+.danger-zone { margin-top: 24px; }
+.btn-danger { background: rgba(233,69,96,0.15); color: var(--accent); border: 1px solid var(--accent); }
+
+/* Calendar */
+.cal-month-header {
+  font-family: var(--mono); font-size: 14px; font-weight: 600;
+  text-align: center; padding: 12px 0 8px; color: var(--text);
+}
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 16px; }
+.cal-dow { text-align: center; font-family: var(--mono); font-size: 10px; color: var(--text-faint); padding: 4px 0; }
+.cal-cell {
+  aspect-ratio: 1; border-radius: 6px; display: flex;
+  flex-direction: column; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 11px; position: relative;
+  cursor: pointer; transition: opacity 0.2s;
+  -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
+}
+.cal-cell.lp-active { outline: 2px solid var(--green); outline-offset: -2px; }
+.cal-cell.empty { background: none; cursor: default; }
+.cal-cell.future { background: var(--surface); color: var(--text-faint); }
+.cal-cell.good { background: rgba(78,204,163,0.3); color: var(--green); }
+.cal-cell.bad { background: rgba(233,69,96,0.3); color: var(--accent); }
+.cal-cell.warn { background: rgba(240,192,64,0.3); color: var(--yellow); }
+.cal-cell.penalty { background: rgba(155,89,182,0.4); color: var(--purple); }
+.cal-cell.today-cell { outline: 2px solid var(--accent); outline-offset: -2px; }
+.cal-cell .cal-drink { position: absolute; bottom: 1px; right: 2px; font-size: 12px; line-height: 1; }
+.cal-cell .cal-weight { position: absolute; bottom: 1px; left: 2px; font-size: 8px; line-height: 1; font-family: var(--mono); }
+.cal-cell .cal-weight.actual { color: #4ecca3; }
+.cal-cell .cal-weight.calculated { color: #8892a4; }
+.cal-cell .cal-weight.projected { color: rgba(78,204,163,0.5); }
+.cal-cell .cal-day-num { font-weight: 600; font-size: 12px; }
+.cal-cell .cal-day-cals { font-size: 9px; opacity: 0.8; }
+
 /* Weight Modal */
 .modal-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
