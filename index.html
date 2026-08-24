@@ -252,77 +252,39 @@ input[type="date"] { -webkit-appearance: none; }
 .proj-toggle span.lbl { font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
 
 /* --- WEEKLY PANEL --- */
-.wk-rollup {
-  background: var(--surface); border-radius: var(--radius);
-  padding: 14px 16px; margin-bottom: 14px;
+.wk-caption {
+  font-family: var(--mono); font-size: 12px; color: var(--text-dim);
+  line-height: 1.5; margin-bottom: 12px;
 }
-.wk-rollup .wk-roll-head {
-  font-family: var(--mono); font-size: 13px; color: var(--text-dim);
-  margin-bottom: 10px;
+.wk-table { width: 100%; border-collapse: collapse; font-family: var(--mono); }
+.wk-table th {
+  position: sticky; top: -20px; z-index: 5;
+  background: var(--surface2); color: var(--text-dim);
+  font-size: 10px; font-weight: 600; text-align: right;
+  padding: 8px 4px; white-space: nowrap; line-height: 1.2;
 }
-.wk-roll-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 10px; }
-.wk-roll-item .k { font-size: 11px; color: var(--text-dim); margin-bottom: 2px; }
-.wk-roll-item .v { font-family: var(--mono); font-size: 18px; font-weight: 700; }
-.wk-roll-note {
-  font-family: var(--mono); font-size: 11px; color: var(--yellow);
-  margin-top: 10px; line-height: 1.4;
+.wk-table th:first-child { text-align: left; border-radius: 6px 0 0 0; padding-left: 8px; }
+.wk-table th:last-child { border-radius: 0 6px 0 0; padding-right: 8px; }
+.wk-table td {
+  font-size: 13px; text-align: right; padding: 9px 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.05); white-space: nowrap;
 }
-
-.wk-row {
-  background: var(--surface); border-radius: var(--radius);
-  padding: 12px 14px; margin-bottom: 8px;
+.wk-table td:first-child { text-align: left; color: var(--text-dim); font-size: 12px; padding-left: 8px; }
+.wk-table td:last-child { padding-right: 8px; }
+.wk-table tr:last-child td { border-bottom: none; }
+.wk-table tr.is-latest td { background: rgba(255,255,255,0.03); }
+.wk-table tr.is-latest td:first-child { color: var(--text); font-weight: 600; }
+.wk-loss { color: var(--green); }
+.wk-gain { color: var(--accent); }
+.wk-nil { color: var(--text-faint); }
+.wk-cal { color: var(--text); }
+.wk-star { color: var(--yellow); }
+.wk-note {
+  font-family: var(--mono); font-size: 11px; color: var(--text-faint);
+  line-height: 1.6; margin-top: 12px;
 }
-.wk-row-top {
-  display: flex; justify-content: space-between; align-items: baseline;
-  margin-bottom: 8px;
-}
-.wk-row-dates { font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
-.wk-row-change { font-family: var(--mono); font-size: 20px; font-weight: 700; }
-.wk-row-change.loss { color: var(--green); }
-.wk-row-change.gain { color: var(--accent); }
-.wk-row-change.none { color: var(--text-faint); font-size: 15px; }
-.wk-row-stats {
-  display: flex; justify-content: space-between; gap: 8px;
-  font-family: var(--mono); font-size: 12px;
-}
-.wk-row-stats .s { flex: 1; }
-.wk-row-stats .s .k { font-size: 10px; color: var(--text-faint); display: block; margin-bottom: 2px; }
-.wk-row-stats .s .v { color: var(--text); }
-.wk-row-stats .s .v.under { color: var(--green); }
-.wk-row-stats .s .v.over { color: var(--accent); }
-.wk-row-stats .s .v.partial { color: var(--yellow); }
-.danger-zone { margin-top: 24px; }
-.btn-danger { background: rgba(233,69,96,0.15); color: var(--accent); border: 1px solid var(--accent); }
-
-/* Calendar */
-.cal-month-header {
-  font-family: var(--mono); font-size: 14px; font-weight: 600;
-  text-align: center; padding: 12px 0 8px; color: var(--text);
-}
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 16px; }
-.cal-dow { text-align: center; font-family: var(--mono); font-size: 10px; color: var(--text-faint); padding: 4px 0; }
-.cal-cell {
-  aspect-ratio: 1; border-radius: 6px; display: flex;
-  flex-direction: column; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 11px; position: relative;
-  cursor: pointer; transition: opacity 0.2s;
-  -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
-}
-.cal-cell.lp-active { outline: 2px solid var(--green); outline-offset: -2px; }
-.cal-cell.empty { background: none; cursor: default; }
-.cal-cell.future { background: var(--surface); color: var(--text-faint); }
-.cal-cell.good { background: rgba(78,204,163,0.3); color: var(--green); }
-.cal-cell.bad { background: rgba(233,69,96,0.3); color: var(--accent); }
-.cal-cell.warn { background: rgba(240,192,64,0.3); color: var(--yellow); }
-.cal-cell.penalty { background: rgba(155,89,182,0.4); color: var(--purple); }
-.cal-cell.today-cell { outline: 2px solid var(--accent); outline-offset: -2px; }
-.cal-cell .cal-drink { position: absolute; bottom: 1px; right: 2px; font-size: 12px; line-height: 1; }
-.cal-cell .cal-weight { position: absolute; bottom: 1px; left: 2px; font-size: 8px; line-height: 1; font-family: var(--mono); }
-.cal-cell .cal-weight.actual { color: #4ecca3; }
-.cal-cell .cal-weight.calculated { color: #8892a4; }
-.cal-cell .cal-weight.projected { color: rgba(78,204,163,0.5); }
-.cal-cell .cal-day-num { font-weight: 600; font-size: 12px; }
-.cal-cell .cal-day-cals { font-size: 9px; opacity: 0.8; }
+.wk-note .wk-star { color: var(--yellow); }
+.wk-note b { color: var(--text-dim); font-weight: 600; }
 
 /* Weight Modal */
 .modal-overlay {
@@ -366,6 +328,10 @@ input[type="date"] { -webkit-appearance: none; }
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
     Today
   </button>
+  <button class="tab-btn" data-tab="calendar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="6" y="13" width="3" height="3" rx="0.5"/><rect x="10.5" y="13" width="3" height="3" rx="0.5"/><rect x="15" y="13" width="3" height="3" rx="0.5"/></svg>
+    Cal
+  </button>
   <button class="tab-btn" data-tab="graph">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
     Graph
@@ -373,10 +339,6 @@ input[type="date"] { -webkit-appearance: none; }
   <button class="tab-btn" data-tab="weekly">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
     Week
-  </button>
-  <button class="tab-btn" data-tab="calendar">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="6" y="13" width="3" height="3" rx="0.5"/><rect x="10.5" y="13" width="3" height="3" rx="0.5"/><rect x="15" y="13" width="3" height="3" rx="0.5"/></svg>
-    Cal
   </button>
   <button class="tab-btn" data-tab="settings">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -442,9 +404,9 @@ input[type="date"] { -webkit-appearance: none; }
 <!-- WEEKLY PANEL -->
 <div class="panel" id="panel-weekly">
   <div class="panel-header">Weekly</div>
-  <div style="font-family:var(--mono);font-size:12px;color:var(--text-dim);margin-bottom:12px;" id="weekly-range-label"></div>
-  <div id="weekly-rollup"></div>
-  <div id="weekly-rows"></div>
+  <div class="wk-caption" id="weekly-caption"></div>
+  <div id="weekly-table"></div>
+  <div id="weekly-notes"></div>
 </div>
 
 <!-- CALENDAR PANEL -->
@@ -743,7 +705,7 @@ let currentDate = todayStr();
 // ============================================================
 // TAB NAVIGATION
 // ============================================================
-const tabOrder = ['day', 'graph', 'weekly', 'calendar', 'settings'];
+const tabOrder = ['day', 'calendar', 'graph', 'weekly', 'settings'];
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -1352,72 +1314,80 @@ function shortDate(s) {
   return months[d.getMonth()] + ' ' + d.getDate();
 }
 
+// Loss shown as a bare positive number; a gain gets a + prefix.
+function fmtLoss(v) {
+  if (v === null || v === undefined) return '<span class="wk-nil">\u2014</span>';
+  const cls = v >= 0 ? 'wk-loss' : 'wk-gain';
+  const txt = (v >= 0 ? '' : '+') + Math.abs(v).toFixed(2);
+  return '<span class="' + cls + '">' + txt + '</span>';
+}
+
+// Past days inside the graph range that were never logged. These are counted
+// at TDEE everywhere in the app, so the table footnotes them by date.
+function unloggedInRange() {
+  const today = todayStr();
+  return dateRange(graphStart(), graphEnd())
+    .filter(d => d < today && !(store.days[d] && store.days[d].foods && store.days[d].foods.length > 0));
+}
+
 function renderWeekly() {
   const rows = buildWeeklyRows();
-  document.getElementById('weekly-range-label').textContent =
-    formatDate(graphStart()) + ' \u2192 ' + formatDate(graphEnd()) + ' (' + graphWeeks() + ' weeks)';
+  const capEl = document.getElementById('weekly-caption');
+  const tblEl = document.getElementById('weekly-table');
+  const noteEl = document.getElementById('weekly-notes');
 
-  const rollEl = document.getElementById('weekly-rollup');
-  const rowsEl = document.getElementById('weekly-rows');
+  capEl.innerHTML = 'Loss table \u2014 a plain number is weight lost, a + is weight gained.<br>'
+    + shortDate(graphStart()) + ' \u2192 ' + shortDate(graphEnd()) + ' (' + graphWeeks() + ' weeks)';
 
   if (rows.length === 0) {
-    rollEl.innerHTML = '';
-    rowsEl.innerHTML = '<div class="no-data">No complete weeks in this range yet.<br>The range is set on the Settings tab.</div>';
+    tblEl.innerHTML = '<div class="no-data">No complete weeks in this range yet.<br>The range is set on the Settings tab.</div>';
+    noteEl.innerHTML = '';
     return;
   }
 
-  // --- rollup: most recent 4 complete weeks, or everything if fewer ---
-  const window4 = rows.slice(-4);
-  const withWeight = window4.filter(r => r.change !== null);
-  const totalLoss = withWeight.reduce((s, r) => s + r.change, 0);
-  const avgLoss = withWeight.length ? totalLoss / withWeight.length : null;
-  const totalIntake = window4.reduce((s, r) => s + r.intake, 0);
-  const totalDays = window4.reduce((s, r) => s + r.dayCount, 0);
-  const avgDaily = totalDays ? Math.round(totalIntake / totalDays) : 0;
+  // Trailing 4-week figures are rolling: each row looks back four weeks from
+  // itself, so an old row shows what the average was as of that Monday.
+  let anyShort = false;
+  const body = rows.map((r, i) => {
+    const win = rows.slice(Math.max(0, i - 3), i + 1);
+    const short = win.length < 4;
+    if (short) anyShort = true;
+    const star = short ? '<span class="wk-star">*</span>' : '';
 
-  const fmtLbs = (v) => (v >= 0 ? '-' : '+') + Math.abs(v).toFixed(2);
-  const lbsColor = (v) => v >= 0 ? 'var(--green)' : 'var(--accent)';
+    const vals = win.map(w => w.change).filter(v => v !== null);
+    const tot = vals.length ? vals.reduce((s, v) => s + v, 0) : null;
+    const avg = vals.length ? tot / vals.length : null;
 
-  let roll = `<div class="wk-rollup">
-    <div class="wk-roll-head">// last ${window4.length} ${window4.length === 1 ? 'week' : 'weeks'}</div>
-    <div class="wk-roll-grid">
-      <div class="wk-roll-item"><div class="k">Avg weekly loss</div><div class="v" style="color:${avgLoss === null ? 'var(--text-faint)' : lbsColor(avgLoss)}">${avgLoss === null ? '\u2014' : fmtLbs(avgLoss) + ' lbs'}</div></div>
-      <div class="wk-roll-item"><div class="k">Total loss</div><div class="v" style="color:${withWeight.length === 0 ? 'var(--text-faint)' : lbsColor(totalLoss)}">${withWeight.length === 0 ? '\u2014' : fmtLbs(totalLoss) + ' lbs'}</div></div>
-      <div class="wk-roll-item"><div class="k">Avg daily intake</div><div class="v">${avgDaily.toLocaleString()}</div></div>
-      <div class="wk-roll-item"><div class="k">Weeks counted</div><div class="v">${window4.length}</div></div>
-    </div>`;
+    const perDay = Math.round(r.intake / r.dayCount);
+    const isLatest = i === rows.length - 1;
 
-  if (window4.length < 4) {
-    roll += `<div class="wk-roll-note">Only ${window4.length} complete ${window4.length === 1 ? 'week' : 'weeks'} since the range start (${shortDate(graphStart())}) \u2014 not a full 4-week figure.</div>`;
-  }
-  roll += '</div>';
-  rollEl.innerHTML = roll;
-
-  // --- per-week rows, newest first ---
-  rowsEl.innerHTML = rows.slice().reverse().map(r => {
-    let changeCls = 'none', changeTxt = '\u2014';
-    if (r.change !== null) {
-      changeCls = r.change >= 0 ? 'loss' : 'gain';
-      changeTxt = fmtLbs(r.change) + ' lbs';
-    }
-    const vsTarget = r.intake - r.target;
-    const vsCls = vsTarget <= 0 ? 'under' : 'over';
-    const vsTxt = (vsTarget <= 0 ? '-' : '+') + Math.abs(vsTarget).toLocaleString();
-    const loggedCls = r.loggedCount === r.dayCount ? '' : 'partial';
-
-    return `<div class="wk-row">
-      <div class="wk-row-top">
-        <span class="wk-row-dates">${shortDate(r.prevMonday)} \u2192 ${shortDate(r.monday)}</span>
-        <span class="wk-row-change ${changeCls}">${changeTxt}</span>
-      </div>
-      <div class="wk-row-stats">
-        <div class="s"><span class="k">intake</span><span class="v">${r.intake.toLocaleString()}</span></div>
-        <div class="s"><span class="k">daily avg</span><span class="v">${Math.round(r.intake / r.dayCount).toLocaleString()}</span></div>
-        <div class="s"><span class="k">vs target</span><span class="v ${vsCls}">${vsTxt}</span></div>
-        <div class="s"><span class="k">logged</span><span class="v ${loggedCls}">${r.loggedCount}/${r.dayCount}</span></div>
-      </div>
-    </div>`;
+    return '<tr' + (isLatest ? ' class="is-latest"' : '') + '>'
+      + '<td>' + shortDate(r.monday) + '</td>'
+      + '<td>' + fmtLoss(r.change) + '</td>'
+      + '<td>' + fmtLoss(avg) + star + '</td>'
+      + '<td>' + fmtLoss(tot) + star + '</td>'
+      + '<td class="wk-cal">' + perDay.toLocaleString() + '</td>'
+      + '</tr>';
   }).join('');
+
+  tblEl.innerHTML = '<table class="wk-table"><thead><tr>'
+    + '<th>Mon</th><th>Week</th><th>4wk<br>avg</th><th>4wk<br>tot</th><th>Cal/day<br>(wk)</th>'
+    + '</tr></thead><tbody>' + body + '</tbody></table>';
+
+  let notes = '';
+  if (anyShort) {
+    notes += '<div class="wk-note"><span class="wk-star">*</span> Fewer than four weeks of lookback available \u2014 '
+      + 'figure runs from the range start (' + shortDate(graphStart()) + ').</div>';
+  }
+  const unlogged = unloggedInRange();
+  if (unlogged.length > 0) {
+    const shown = unlogged.slice(0, 12).map(shortDate).join(', ');
+    const more = unlogged.length > 12 ? ' +' + (unlogged.length - 12) + ' more' : '';
+    notes += '<div class="wk-note"><b>' + unlogged.length + ' unlogged '
+      + (unlogged.length === 1 ? 'day' : 'days') + ' counted at TDEE ('
+      + getTDEE().toLocaleString() + '):</b><br>' + shown + more + '</div>';
+  }
+  noteEl.innerHTML = notes;
 }
 
 // ============================================================
