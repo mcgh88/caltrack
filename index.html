@@ -246,6 +246,51 @@ input[type="date"] { -webkit-appearance: none; }
 .panel::-webkit-scrollbar { width: 4px; }
 .panel::-webkit-scrollbar-thumb { background: var(--text-faint); border-radius: 2px; }
 .no-data { text-align: center; padding: 40px 20px; color: var(--text-dim); font-size: 14px; }
+
+/* Projection toggle on graph */
+.proj-toggle { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.proj-toggle span.lbl { font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
+
+/* --- WEEKLY PANEL --- */
+.wk-rollup {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 14px 16px; margin-bottom: 14px;
+}
+.wk-rollup .wk-roll-head {
+  font-family: var(--mono); font-size: 13px; color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.wk-roll-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 10px; }
+.wk-roll-item .k { font-size: 11px; color: var(--text-dim); margin-bottom: 2px; }
+.wk-roll-item .v { font-family: var(--mono); font-size: 18px; font-weight: 700; }
+.wk-roll-note {
+  font-family: var(--mono); font-size: 11px; color: var(--yellow);
+  margin-top: 10px; line-height: 1.4;
+}
+
+.wk-row {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 12px 14px; margin-bottom: 8px;
+}
+.wk-row-top {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 8px;
+}
+.wk-row-dates { font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
+.wk-row-change { font-family: var(--mono); font-size: 20px; font-weight: 700; }
+.wk-row-change.loss { color: var(--green); }
+.wk-row-change.gain { color: var(--accent); }
+.wk-row-change.none { color: var(--text-faint); font-size: 15px; }
+.wk-row-stats {
+  display: flex; justify-content: space-between; gap: 8px;
+  font-family: var(--mono); font-size: 12px;
+}
+.wk-row-stats .s { flex: 1; }
+.wk-row-stats .s .k { font-size: 10px; color: var(--text-faint); display: block; margin-bottom: 2px; }
+.wk-row-stats .s .v { color: var(--text); }
+.wk-row-stats .s .v.under { color: var(--green); }
+.wk-row-stats .s .v.over { color: var(--accent); }
+.wk-row-stats .s .v.partial { color: var(--yellow); }
 .danger-zone { margin-top: 24px; }
 .btn-danger { background: rgba(233,69,96,0.15); color: var(--accent); border: 1px solid var(--accent); }
 
@@ -261,7 +306,9 @@ input[type="date"] { -webkit-appearance: none; }
   flex-direction: column; align-items: center; justify-content: center;
   font-family: var(--mono); font-size: 11px; position: relative;
   cursor: pointer; transition: opacity 0.2s;
+  -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
 }
+.cal-cell.lp-active { outline: 2px solid var(--green); outline-offset: -2px; }
 .cal-cell.empty { background: none; cursor: default; }
 .cal-cell.future { background: var(--surface); color: var(--text-faint); }
 .cal-cell.good { background: rgba(78,204,163,0.3); color: var(--green); }
@@ -323,6 +370,10 @@ input[type="date"] { -webkit-appearance: none; }
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
     Graph
   </button>
+  <button class="tab-btn" data-tab="weekly">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    Week
+  </button>
   <button class="tab-btn" data-tab="calendar">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="6" y="13" width="3" height="3" rx="0.5"/><rect x="10.5" y="13" width="3" height="3" rx="0.5"/><rect x="15" y="13" width="3" height="3" rx="0.5"/></svg>
     Cal
@@ -369,11 +420,15 @@ input[type="date"] { -webkit-appearance: none; }
   <div class="panel-header">Weight &amp; Calories</div>
   <div class="graph-controls">
     <span style="font-family:var(--mono);font-size:12px;color:var(--text-dim);" id="graph-range-label"></span>
+    <label class="proj-toggle">
+      <span class="lbl">Projection</span>
+      <span class="switch"><input type="checkbox" id="toggle-projection"><span class="track"></span></span>
+    </label>
   </div>
   <div class="legend">
     <div class="legend-item"><div class="legend-dot" style="background:#5b9bd5"></div> Weigh-in</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Calculated</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Projected</div>
+    <div class="legend-item" id="legend-projected"><div class="legend-dot" style="background:var(--green)"></div> Projected</div>
   </div>
   <div class="canvas-wrap"><canvas id="weight-chart" height="250"></canvas></div>
   <div class="canvas-wrap"><canvas id="calorie-chart" height="200"></canvas></div>
@@ -382,6 +437,14 @@ input[type="date"] { -webkit-appearance: none; }
     <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div> Target</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div> Unlogged</div>
   </div>
+</div>
+
+<!-- WEEKLY PANEL -->
+<div class="panel" id="panel-weekly">
+  <div class="panel-header">Weekly</div>
+  <div style="font-family:var(--mono);font-size:12px;color:var(--text-dim);margin-bottom:12px;" id="weekly-range-label"></div>
+  <div id="weekly-rollup"></div>
+  <div id="weekly-rows"></div>
 </div>
 
 <!-- CALENDAR PANEL -->
@@ -442,7 +505,6 @@ input[type="date"] { -webkit-appearance: none; }
     </div>
     <div style="font-size:11px;color:var(--text-faint);margin-top:8px;font-family:var(--mono);line-height:1.5;">Each view shows only its own window. The calendar renders nothing before its start date. Turn on the toggle to lock the graph to the calendar window; turn it off to set the graph separately. Calculations always run across whatever these windows cover.</div>
   </div>
-  <button class="btn btn-green btn-block" id="save-settings-btn">Save Settings</button>
   <div class="setting-group danger-zone">
     <h3>// data</h3>
     <div class="setting-row">
@@ -506,7 +568,7 @@ function getStore() {
 
 function defaultStore() {
   return {
-    settings: { tdee: 2650, targetWeekday: 1250, targetWeekend: 1750, graphStart: addDays(todayStr(), -28), graphWeeks: 12, calStart: addDays(todayStr(), -28), calWeeks: 26, linkGraph: false },
+    settings: { tdee: 2650, targetWeekday: 1250, targetWeekend: 1750, graphStart: addDays(todayStr(), -28), graphWeeks: 12, calStart: addDays(todayStr(), -28), calWeeks: 26, linkGraph: false, showProjection: true },
     days: {}
   };
 }
@@ -569,6 +631,8 @@ function getTDEE() { return store.settings.tdee || 2650; }
 function graphStart() { return store.settings.graphStart || addDays(todayStr(), -28); }
 function graphWeeks() { return store.settings.graphWeeks || 12; }
 function graphEnd() { return addDays(graphStart(), graphWeeks() * 7 - 1); }
+
+function showProjection() { return store.settings.showProjection !== false; }
 
 function calStart() { return store.settings.calStart || addDays(todayStr(), -28); }
 function calWeeks() { return store.settings.calWeeks || 26; }
@@ -679,7 +743,7 @@ let currentDate = todayStr();
 // ============================================================
 // TAB NAVIGATION
 // ============================================================
-const tabOrder = ['day', 'graph', 'calendar', 'settings'];
+const tabOrder = ['day', 'graph', 'weekly', 'calendar', 'settings'];
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -693,9 +757,16 @@ function switchToTab(tab) {
   document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
   document.getElementById('panel-' + tab).classList.add('active');
   if (tab === 'graph') renderGraphs();
+  if (tab === 'weekly') renderWeekly();
   if (tab === 'calendar') renderCalendar();
   if (tab === 'settings') loadSettings();
   if (tab === 'day') renderDay();
+}
+
+// Jump to a specific date's food entry.
+function goToDay(dateStr) {
+  currentDate = dateStr;
+  switchToTab('day');
 }
 
 // Swipe between tabs
@@ -805,6 +876,12 @@ function renderDay() {
 
 document.getElementById('prev-day').addEventListener('click', () => { currentDate = addDays(currentDate, -1); renderDay(); });
 document.getElementById('next-day').addEventListener('click', () => { currentDate = addDays(currentDate, 1); renderDay(); });
+
+// Tap the date label to snap back to today. No-op if already there.
+document.getElementById('current-date-label').addEventListener('click', () => {
+  if (currentDate === todayStr()) return;
+  currentDate = todayStr(); renderDay();
+});
 
 document.getElementById('add-food-btn').addEventListener('click', addFood);
 document.getElementById('food-name').addEventListener('keydown', e => { if (e.key === 'Enter') addFood(); });
@@ -918,6 +995,45 @@ document.getElementById('weight-modal-input').addEventListener('keydown', (e) =>
 // ============================================================
 // CALENDAR
 // ============================================================
+// Tap a cell to open that day's food entry; hold it to log morning weight.
+// Pointer events so one code path covers touch and mouse. A press that
+// drifts more than 10px is treated as a scroll and cancels the hold.
+const LONG_PRESS_MS = 400;
+
+function attachCellGestures(cell, dateStr) {
+  let timer = null, fired = false, sx = 0, sy = 0;
+
+  const cancel = () => {
+    clearTimeout(timer); timer = null;
+    cell.classList.remove('lp-active');
+  };
+
+  cell.addEventListener('pointerdown', e => {
+    fired = false; sx = e.clientX; sy = e.clientY;
+    timer = setTimeout(() => {
+      fired = true;
+      cell.classList.remove('lp-active');
+      if (navigator.vibrate) navigator.vibrate(10);
+      openWeightModal(dateStr);
+    }, LONG_PRESS_MS);
+    cell.classList.add('lp-active');
+  });
+
+  cell.addEventListener('pointermove', e => {
+    if (!timer) return;
+    if (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10) cancel();
+  });
+
+  cell.addEventListener('pointerup', cancel);
+  cell.addEventListener('pointercancel', cancel);
+  cell.addEventListener('pointerleave', cancel);
+
+  cell.addEventListener('click', () => {
+    if (fired) { fired = false; return; }  // hold already handled it
+    goToDay(dateStr);
+  });
+}
+
 function renderCalendar() {
   const container = document.getElementById('calendar-grid');
   container.innerHTML = '';
@@ -987,7 +1103,7 @@ function renderCalendar() {
       if (rec.drinks) cell.innerHTML += '<span class="cal-drink">\uD83C\uDF7A</span>';
       if (rec.weight) cell.innerHTML += `<span class="cal-weight ${rec.weight.type}">${rec.weight.w.toFixed(1)}</span>`;
 
-      cell.addEventListener('click', () => openWeightModal(dateStr));
+      attachCellGestures(cell, dateStr);
       grid.appendChild(cell);
     }
     container.appendChild(grid);
@@ -997,10 +1113,17 @@ function renderCalendar() {
 // ============================================================
 // GRAPHS
 // ============================================================
+document.getElementById('toggle-projection').addEventListener('change', (e) => {
+  store.settings.showProjection = e.target.checked;
+  saveStore(store); renderGraphs();
+});
+
 function renderGraphs() {
   const start = graphStart(), end = graphEnd();
   document.getElementById('graph-range-label').textContent =
     formatDate(start) + ' \u2192 ' + formatDate(end) + ' (' + graphWeeks() + ' weeks)';
+  document.getElementById('toggle-projection').checked = showProjection();
+  document.getElementById('legend-projected').style.display = showProjection() ? '' : 'none';
   // Built once per render and shared by both charts.
   const model = buildDayModel();
   const dates = dateRange(start, end);
@@ -1061,8 +1184,9 @@ function drawWeightChart(model, dates) {
     }
   });
 
-  // Projection is always drawn.
-  if (futureWeights.length > 0) {
+  // Drawn only when the Projection toggle is on. The axis and range are
+  // unaffected either way — they always follow the Settings window.
+  if (showProjection() && futureWeights.length > 0) {
     ctx.strokeStyle = '#4ecca3'; ctx.lineWidth = 2; ctx.setLineDash([6, 3]);
     ctx.beginPath();
     if (pastWeights.length > 0) { const lp = pastWeights[pastWeights.length - 1]; ctx.moveTo(xScale(lp.idx), yScale(lp.w)); }
@@ -1177,8 +1301,132 @@ function drawCalorieChart(model, dates) {
 }
 
 // ============================================================
+// WEEKLY
+//
+// One row per complete Monday-to-Monday week inside the graph range.
+// A row anchored on Monday M covers the seven days M-7 .. M-1, and its
+// weight change is weight(M-7) - weight(M), so positive means loss.
+// A partial week at the range start is skipped: the M-7 >= start test
+// drops it automatically. Nothing past today is shown.
+// ============================================================
+function buildWeeklyRows() {
+  const model = buildDayModel();
+  const start = graphStart(), end = graphEnd();
+  const today = todayStr();
+  const tdee = getTDEE();
+  const lastAllowed = end < today ? end : today;
+
+  // Walk forward to the first Monday at or after the range start.
+  let cur = start;
+  let guard = 0;
+  while (parseDate(cur).getDay() !== 1 && guard++ < 7) cur = addDays(cur, 1);
+
+  const rows = [];
+  while (cur <= lastAllowed) {
+    const prev = addDays(cur, -7);
+    if (prev >= start) {
+      const days = dateRange(prev, addDays(cur, -1));
+      let intake = 0, target = 0, loggedCount = 0;
+
+      days.forEach(d => {
+        const rec = model[d];
+        target += rec ? rec.target : getTargetForDate(d);
+        if (rec && rec.logged) { intake += rec.eaten; loggedCount++; }
+        else if (rec && rec.penalty) intake += tdee;   // unlogged past day counts as maintenance
+      });
+
+      const wStart = model[prev] && model[prev].weight ? model[prev].weight.w : null;
+      const wEnd = model[cur] && model[cur].weight ? model[cur].weight.w : null;
+      const change = (wStart !== null && wEnd !== null) ? (wStart - wEnd) : null;
+
+      rows.push({ monday: cur, prevMonday: prev, change, intake, target, loggedCount, dayCount: days.length });
+    }
+    cur = addDays(cur, 7);
+  }
+  return rows;
+}
+
+function shortDate(s) {
+  const d = parseDate(s);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[d.getMonth()] + ' ' + d.getDate();
+}
+
+function renderWeekly() {
+  const rows = buildWeeklyRows();
+  document.getElementById('weekly-range-label').textContent =
+    formatDate(graphStart()) + ' \u2192 ' + formatDate(graphEnd()) + ' (' + graphWeeks() + ' weeks)';
+
+  const rollEl = document.getElementById('weekly-rollup');
+  const rowsEl = document.getElementById('weekly-rows');
+
+  if (rows.length === 0) {
+    rollEl.innerHTML = '';
+    rowsEl.innerHTML = '<div class="no-data">No complete weeks in this range yet.<br>The range is set on the Settings tab.</div>';
+    return;
+  }
+
+  // --- rollup: most recent 4 complete weeks, or everything if fewer ---
+  const window4 = rows.slice(-4);
+  const withWeight = window4.filter(r => r.change !== null);
+  const totalLoss = withWeight.reduce((s, r) => s + r.change, 0);
+  const avgLoss = withWeight.length ? totalLoss / withWeight.length : null;
+  const totalIntake = window4.reduce((s, r) => s + r.intake, 0);
+  const totalDays = window4.reduce((s, r) => s + r.dayCount, 0);
+  const avgDaily = totalDays ? Math.round(totalIntake / totalDays) : 0;
+
+  const fmtLbs = (v) => (v >= 0 ? '-' : '+') + Math.abs(v).toFixed(2);
+  const lbsColor = (v) => v >= 0 ? 'var(--green)' : 'var(--accent)';
+
+  let roll = `<div class="wk-rollup">
+    <div class="wk-roll-head">// last ${window4.length} ${window4.length === 1 ? 'week' : 'weeks'}</div>
+    <div class="wk-roll-grid">
+      <div class="wk-roll-item"><div class="k">Avg weekly loss</div><div class="v" style="color:${avgLoss === null ? 'var(--text-faint)' : lbsColor(avgLoss)}">${avgLoss === null ? '\u2014' : fmtLbs(avgLoss) + ' lbs'}</div></div>
+      <div class="wk-roll-item"><div class="k">Total loss</div><div class="v" style="color:${withWeight.length === 0 ? 'var(--text-faint)' : lbsColor(totalLoss)}">${withWeight.length === 0 ? '\u2014' : fmtLbs(totalLoss) + ' lbs'}</div></div>
+      <div class="wk-roll-item"><div class="k">Avg daily intake</div><div class="v">${avgDaily.toLocaleString()}</div></div>
+      <div class="wk-roll-item"><div class="k">Weeks counted</div><div class="v">${window4.length}</div></div>
+    </div>`;
+
+  if (window4.length < 4) {
+    roll += `<div class="wk-roll-note">Only ${window4.length} complete ${window4.length === 1 ? 'week' : 'weeks'} since the range start (${shortDate(graphStart())}) \u2014 not a full 4-week figure.</div>`;
+  }
+  roll += '</div>';
+  rollEl.innerHTML = roll;
+
+  // --- per-week rows, newest first ---
+  rowsEl.innerHTML = rows.slice().reverse().map(r => {
+    let changeCls = 'none', changeTxt = '\u2014';
+    if (r.change !== null) {
+      changeCls = r.change >= 0 ? 'loss' : 'gain';
+      changeTxt = fmtLbs(r.change) + ' lbs';
+    }
+    const vsTarget = r.intake - r.target;
+    const vsCls = vsTarget <= 0 ? 'under' : 'over';
+    const vsTxt = (vsTarget <= 0 ? '-' : '+') + Math.abs(vsTarget).toLocaleString();
+    const loggedCls = r.loggedCount === r.dayCount ? '' : 'partial';
+
+    return `<div class="wk-row">
+      <div class="wk-row-top">
+        <span class="wk-row-dates">${shortDate(r.prevMonday)} \u2192 ${shortDate(r.monday)}</span>
+        <span class="wk-row-change ${changeCls}">${changeTxt}</span>
+      </div>
+      <div class="wk-row-stats">
+        <div class="s"><span class="k">intake</span><span class="v">${r.intake.toLocaleString()}</span></div>
+        <div class="s"><span class="k">daily avg</span><span class="v">${Math.round(r.intake / r.dayCount).toLocaleString()}</span></div>
+        <div class="s"><span class="k">vs target</span><span class="v ${vsCls}">${vsTxt}</span></div>
+        <div class="s"><span class="k">logged</span><span class="v ${loggedCls}">${r.loggedCount}/${r.dayCount}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
 // SETTINGS
 // ============================================================
+// Set while loadSettings() populates fields, so programmatic writes can
+// never be mistaken for user edits and trigger a save.
+let suppressAutosave = false;
+
 // Week pickers: native wheel on iOS, dropdown elsewhere. No typing.
 ['set-cal-weeks', 'set-graph-weeks'].forEach(id => {
   const sel = document.getElementById(id);
@@ -1203,10 +1451,14 @@ function applyGraphLink() {
 }
 
 ['set-link-graph', 'set-cal-start', 'set-cal-weeks'].forEach(id => {
-  document.getElementById(id).addEventListener('change', applyGraphLink);
+  document.getElementById(id).addEventListener('change', () => {
+    applyGraphLink();      // mirror graph fields first, then commit
+    saveSettingsNow();
+  });
 });
 
 function loadSettings() {
+  suppressAutosave = true;
   const s = store.settings;
   document.getElementById('set-tdee').value = s.tdee || '';
   document.getElementById('set-target-weekday').value = s.targetWeekday || '';
@@ -1218,6 +1470,7 @@ function loadSettings() {
   document.getElementById('set-graph-weeks').value = graphWeeks();
   applyGraphLink();
   updateWeeklyProjection();
+  suppressAutosave = false;
 }
 
 function clampWeeks(v, fallback) {
@@ -1226,7 +1479,10 @@ function clampWeeks(v, fallback) {
   return Math.min(n, 104);
 }
 
-document.getElementById('save-settings-btn').addEventListener('click', () => {
+// Autosave. Every field commits on `change` — numbers on blur, pickers
+// natively — so there is one code path and no Save button.
+function saveSettingsNow() {
+  if (suppressAutosave) return;
   store.settings.tdee = parseInt(document.getElementById('set-tdee').value) || store.settings.tdee;
   store.settings.targetWeekday = parseInt(document.getElementById('set-target-weekday').value) || 1250;
   store.settings.targetWeekend = parseInt(document.getElementById('set-target-weekend').value) || 1750;
@@ -1240,9 +1496,12 @@ document.getElementById('save-settings-btn').addEventListener('click', () => {
     store.settings.graphStart = document.getElementById('set-graph-start').value || addDays(todayStr(), -28);
     store.settings.graphWeeks = clampWeeks(document.getElementById('set-graph-weeks').value, 12);
   }
-  saveStore(store); showToast('Settings saved');
-  loadSettings(); renderDay();
-});
+  saveStore(store); showToast('Saved');
+  updateWeeklyProjection(); renderDay();
+}
+
+['set-tdee', 'set-target-weekday', 'set-target-weekend', 'set-graph-start', 'set-graph-weeks']
+  .forEach(id => document.getElementById(id).addEventListener('change', saveSettingsNow));
 
 function updateWeeklyProjection() {
   const el = document.getElementById('weekly-projection');
