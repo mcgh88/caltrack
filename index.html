@@ -481,11 +481,11 @@ input[type="date"] { -webkit-appearance: none; }
     </div>
     <div class="setting-row">
       <label>Weekday target (cal)</label>
-      <input type="number" id="set-target-weekday" placeholder="1250" inputmode="numeric">
+      <select id="set-target-weekday"></select>
     </div>
     <div class="setting-row">
       <label>Weekend target (cal)</label>
-      <input type="number" id="set-target-weekend" placeholder="1750" inputmode="numeric">
+      <select id="set-target-weekend"></select>
     </div>
     <div id="weekly-projection" style="margin-top:12px;padding:10px;background:var(--bg);border-radius:8px;font-family:var(--mono);font-size:13px;color:var(--text-dim);"></div>
     <div style="font-size:11px;color:var(--text-faint);margin-top:8px;font-family:var(--mono);line-height:1.5;">Day colours &mdash; <span style="color:var(--green);">green</span>: at or under target &middot; <span style="color:var(--yellow);">yellow</span>: over target but under TDEE &middot; <span style="color:var(--accent);">red</span>: over TDEE &middot; <span style="color:var(--purple);">purple</span>: never logged, shown as &quot;!&quot; and counted as TDEE so weight holds flat.</div>
@@ -1461,25 +1461,51 @@ function renderWeekly() {
     return;
   }
 
-  // Trailing 4-week figures are rolling: each row looks back four weeks from
-  // itself, so an old row shows what the average was as of that Monday.
+  // The average is a 3-week window centred on its own row: previous week,
+  // this week, next week. The first and last rows have no neighbour on one
+  // side and fall back to the two weeks available, marked with a star.
+  //
+  // The in-progress row is a projection, so it never counts as a neighbour
+  // for anyone else — otherwise the last completed week's average would
+  // drift every day as the current week fills in. It still gets its own
+  // (clipped, backward-looking) window.
+  //
+  // The 4-week total stays trailing and is printed only on the first row of
+  // each month, where it reads as a rough monthly checkpoint.
   let anyShort = false;
+  const sundayOf = (r) => addDays(r.monday, -1);
+  const monthOf = (r) => sundayOf(r).slice(0, 7);
+
   const body = rows.map((r, i) => {
-    const win = rows.slice(Math.max(0, i - 3), i + 1);
-    const short = win.length < 4;
-    if (short) anyShort = true;
-    const star = short ? '<span class="wk-star">*</span>' : '';
+    const win = rows
+      .slice(Math.max(0, i - 1), i + 2)
+      .filter(w => w === r || !w.inProgress);
+    const shortAvg = win.length < 3;
+    if (shortAvg) anyShort = true;
+    const avgStar = shortAvg ? '<span class="wk-star">*</span>' : '';
 
     const vals = win.map(w => w.change).filter(v => v !== null);
-    const tot = vals.length ? vals.reduce((s, v) => s + v, 0) : null;
-    const avg = vals.length ? tot / vals.length : null;
+    const avg = vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
+
+    // Trailing four weeks, shown only where the month turns over. The very
+    // first row of the range has nothing behind it, so it stays blank.
+    const showTot = i > 0 && monthOf(r) !== monthOf(rows[i - 1]);
+    let totCell = '';
+    if (showTot) {
+      const tWin = rows.slice(Math.max(0, i - 3), i + 1);
+      const tVals = tWin.map(w => w.change).filter(v => v !== null);
+      const tot = tVals.length ? tVals.reduce((s, v) => s + v, 0) : null;
+      const shortTot = tWin.length < 4;
+      if (shortTot) anyShort = true;
+      totCell = fmtLoss(tot) + (shortTot ? '<span class="wk-star">*</span>' : '');
+    }
 
     const perDay = Math.round(r.intake / r.dayCount);
     const isLatest = i === rows.length - 1 && !r.inProgress;
 
     // The row is labelled by the Sunday that closes the week. Every figure
     // above still keys off the Monday anchor; this is presentation only.
-    const label = shortDate(addDays(r.monday, -1))
+    const label = shortDate(sundayOf(r))
       + (r.inProgress ? '<span class="wk-tag">in progress</span>' : '');
 
     const cls = r.inProgress ? ' class="is-current"' : (isLatest ? ' class="is-latest"' : '');
@@ -1487,14 +1513,14 @@ function renderWeekly() {
     return '<tr' + cls + '>'
       + '<td>' + label + '</td>'
       + '<td>' + fmtLoss(r.change) + '</td>'
-      + '<td>' + fmtLoss(avg) + star + '</td>'
-      + '<td>' + fmtLoss(tot) + star + '</td>'
+      + '<td>' + fmtLoss(avg) + avgStar + '</td>'
+      + '<td>' + totCell + '</td>'
       + '<td class="wk-cal">' + perDay.toLocaleString() + '</td>'
       + '</tr>';
   }).join('');
 
   tblEl.innerHTML = '<table class="wk-table"><thead><tr>'
-    + '<th>Week<br>ending</th><th>Week</th><th>4wk<br>avg</th><th>4wk<br>tot</th><th>Cal/day<br>(wk)</th>'
+    + '<th>Week<br>ending</th><th>Week</th><th>3wk avg<br>(ctr)</th><th>4wk<br>tot</th><th>Cal/day<br>(wk)</th>'
     + '</tr></thead><tbody>' + body + '</tbody></table>';
 
   let notes = '';
@@ -1509,9 +1535,13 @@ function renderWeekly() {
       + 'Today is counted at ' + (weekTodayActual ? 'what is logged so far' : 'target')
       + '. Both the loss and cal/day figures move as the week fills in.</div>';
   }
+  notes += '<div class="wk-note"><b>4wk tot</b> is a trailing four-week total, printed on the '
+    + 'first row of each month as a rough monthly checkpoint.</div>';
   if (anyShort) {
-    notes += '<div class="wk-note"><span class="wk-star">*</span> Fewer than four weeks of lookback available \u2014 '
-      + 'figure runs from the range start (' + shortDate(graphStart()) + ').</div>';
+    notes += '<div class="wk-note"><span class="wk-star">*</span> Window clipped \u2014 the figure covers '
+      + 'only the weeks available. The 3-week average is centred on its own row, so the first and last '
+      + 'rows are always short one side; the trailing total clips at the range start ('
+      + shortDate(graphStart()) + ').</div>';
   }
   const unlogged = unloggedInRange();
   if (unlogged.length > 0) {
@@ -1547,6 +1577,30 @@ let suppressAutosave = false;
   }
 });
 
+// Calorie target pickers: 800\u20134000 in 50s, same wheel/dropdown treatment.
+['set-target-weekday', 'set-target-weekend'].forEach(id => {
+  const sel = document.getElementById(id);
+  for (let c = 800; c <= 4000; c += 50) {
+    const o = document.createElement('option');
+    o.value = c;
+    o.textContent = c.toLocaleString();
+    sel.appendChild(o);
+  }
+});
+
+// A stored value off the 50-step grid (an older setting, or an import) would
+// otherwise fail to select and silently snap to 800. Slot it in instead.
+function ensureCalOption(sel, val) {
+  const n = Number(val);
+  if (!n) return;
+  if ([...sel.options].some(o => Number(o.value) === n)) return;
+  const o = document.createElement('option');
+  o.value = n;
+  o.textContent = n.toLocaleString();
+  const after = [...sel.options].find(x => Number(x.value) > n);
+  after ? sel.insertBefore(o, after) : sel.appendChild(o);
+}
+
 function applyGraphLink() {
   const linked = document.getElementById('set-link-graph').checked;
   const gs = document.getElementById('set-graph-start');
@@ -1570,8 +1624,12 @@ function loadSettings() {
   suppressAutosave = true;
   const s = store.settings;
   document.getElementById('set-tdee').value = s.tdee || '';
-  document.getElementById('set-target-weekday').value = s.targetWeekday || '';
-  document.getElementById('set-target-weekend').value = s.targetWeekend || '';
+  const wdSel = document.getElementById('set-target-weekday');
+  const weSel = document.getElementById('set-target-weekend');
+  ensureCalOption(wdSel, s.targetWeekday || 1250);
+  ensureCalOption(weSel, s.targetWeekend || 1750);
+  wdSel.value = s.targetWeekday || 1250;
+  weSel.value = s.targetWeekend || 1750;
   document.getElementById('set-cal-start').value = calStart();
   document.getElementById('set-cal-weeks').value = calWeeks();
   document.getElementById('set-link-graph').checked = !!s.linkGraph;
