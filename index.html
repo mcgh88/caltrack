@@ -577,7 +577,7 @@ function getStore() {
 
 function defaultStore() {
   return {
-    settings: { tdee: 2650, targetWeekday: 1250, targetWeekend: 1750, graphStart: addDays(todayStr(), -28), graphWeeks: 12, calStart: addDays(todayStr(), -28), calWeeks: 26, linkGraph: false, showProjection: true },
+    settings: { tdee: 2650, targetWeekday: 1250, targetWeekend: 1750, graphStart: addDays(todayStr(), -28), graphWeeks: 12, calStart: addDays(todayStr(), -28), calWeeks: 26, linkGraph: false, showProjection: true, weekTodayActual: false },
     days: {}
   };
 }
@@ -663,13 +663,20 @@ function dateRange(start, end) {
 // that anchor can affect anything after it, so this is exact, not an
 // approximation. Never cached — rebuilt on each render.
 // ------------------------------------------------------------
-function buildDayModel() {
+// reachBack (optional) pulls the start of the chain earlier than anything on
+// screen. The weekly panel needs this: a month total is anchored on the 1st,
+// which usually sits outside the displayed range. Widening backward cannot
+// disturb any existing value — an actual weigh-in overwrites the running
+// weight, so the chain re-converges at the old start no matter what is added
+// in front of it.
+function buildDayModel(reachBack) {
   const today = todayStr();
   const tdee = getTDEE();
 
   const gS = graphStart(), gE = graphEnd();
   const cS = calStart(), cE = calEnd();
-  const displayMin = gS < cS ? gS : cS;
+  let displayMin = gS < cS ? gS : cS;
+  if (reachBack && reachBack < displayMin) displayMin = reachBack;
   const displayMax = gE > cE ? gE : cE;
 
   // Nearest actual weigh-in at or before displayMin; if none exists, the
@@ -767,8 +774,10 @@ function switchToTab(tab) {
   document.getElementById('panel-' + tab).classList.add('active');
   if (tab === 'graph') renderGraphs();
   if (tab === 'weekly') {
-    weekTodayActual = false;                 // never carries between visits
-    document.getElementById('toggle-week-today').checked = false;
+    // Re-read from the store rather than trusting the in-memory copy, so an
+    // import or a restore is picked up here too.
+    weekTodayActual = store.settings.weekTodayActual === true;
+    document.getElementById('toggle-week-today').checked = weekTodayActual;
     renderWeekly();
   }
   if (tab === 'calendar') renderCalendar();
@@ -1327,10 +1336,10 @@ function drawCalorieChart(model, dates) {
 // counted at target and the closing weight is projected rather than read
 // off the scale. Everything else about the row is computed the same way.
 // ============================================================
-// Weekly-only display mode, deliberately not persisted: it resets to target
-// every time the tab is opened, so a stale toggle can never silently change
-// what the numbers mean days later.
-let weekTodayActual = false;
+// Weekly-only display mode, persisted in settings so it stays wherever it was
+// last put. The in-progress row's footnote always spells out which of the two
+// assumptions is in force, so the setting can never be silently misread.
+let weekTodayActual = store.settings.weekTodayActual === true;
 
 // Calories a single day contributes to a weekly row.
 //   past    — what was logged, or TDEE if it was never logged (the penalty
@@ -1461,43 +1470,84 @@ function renderWeekly() {
     return;
   }
 
-  // The average is a 3-week window centred on its own row: previous week,
-  // this week, next week. The first and last rows have no neighbour on one
-  // side and fall back to the two weeks available, marked with a star.
-  //
-  // The in-progress row is a projection, so it never counts as a neighbour
-  // for anyone else — otherwise the last completed week's average would
-  // drift every day as the current week fills in. It still gets its own
-  // (clipped, backward-looking) window.
-  //
-  // The 4-week total stays trailing and is printed only on the first row of
-  // each month, where it reads as a rough monthly checkpoint.
-  let anyShort = false;
+  // The month total is a real calendar month — the weight on the 1st against
+  // the weight on the following 1st — so it ignores where the week boundaries
+  // happen to fall. It is printed on the first row that lands in a new month,
+  // which is the point at which the month it reports on has just closed.
+  const firstOf = (ym) => ym + '-01';
+  const prevMonth = (ym) => {
+    const y = +ym.slice(0, 4), m = +ym.slice(5, 7);
+    return m === 1 ? (y - 1) + '-12' : y + '-' + String(m - 1).padStart(2, '0');
+  };
+  const nextMonth = (ym) => {
+    const y = +ym.slice(0, 4), m = +ym.slice(5, 7);
+    return m === 12 ? (y + 1) + '-01' : y + '-' + String(m + 1).padStart(2, '0');
+  };
+  const monthLabel = (ym) => {
+    const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return names[+ym.slice(5, 7) - 1];
+  };
+
+  // The earliest month this table can report on is the month the first row
+  // falls in, so the chain is pulled back to the 1st of the month before that.
+  // One month of margin, a couple of dozen extra days in the loop.
+  const model = buildDayModel(firstOf(prevMonth(graphStart().slice(0, 7))));
+  const weightOn = (d) => (model[d] && model[d].weight) ? model[d].weight.w : null;
+
+  // An unlogged day is held at TDEE, which flattens the chain across it. But
+  // that error only survives as far as the next actual weigh-in, which
+  // overwrites the running weight outright. So a gap only distorts an endpoint
+  // if no weigh-in falls between the two — weigh in the next morning and the
+  // month total is untouched. Only the gaps that genuinely move a number get
+  // flagged, otherwise the star fires constantly and stops meaning anything.
+  const weighInDates = Object.keys(store.days)
+    .filter(d => store.days[d] && store.days[d].weight).sort();
+
+  function gapsBehind(endpoint) {
+    let anchor = null;
+    for (const wd of weighInDates) { if (wd <= endpoint) anchor = wd; else break; }
+    if (anchor === null) return [];
+    return dateRange(anchor, addDays(endpoint, -1))
+      .filter(d => { const rec = model[d]; return !rec || (rec.isPast && !rec.logged); });
+  }
+
+  // Whole-month change, 1st against the following 1st. Both ends have to be
+  // real points on the chain — no partial months, and no extrapolating back
+  // past the first weigh-in on record.
+  function monthTotal(ym) {
+    const open = firstOf(ym), close = firstOf(nextMonth(ym));
+    const wOpen = weightOn(open), wClose = weightOn(close);
+    if (wOpen === null || wClose === null) return null;
+    const gaps = new Set([...gapsBehind(open), ...gapsBehind(close)]);
+    return { tot: wOpen - wClose, gaps: gaps.size };
+  }
+
+  let anyMonth = false;
+  const gapMonths = [];
   const sundayOf = (r) => addDays(r.monday, -1);
   const monthOf = (r) => sundayOf(r).slice(0, 7);
 
   const body = rows.map((r, i) => {
-    const win = rows
-      .slice(Math.max(0, i - 1), i + 2)
-      .filter(w => w === r || !w.inProgress);
-    const shortAvg = win.length < 3;
-    if (shortAvg) anyShort = true;
-    const avgStar = shortAvg ? '<span class="wk-star">*</span>' : '';
-
-    const vals = win.map(w => w.change).filter(v => v !== null);
-    const avg = vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
-
-    // Trailing four weeks, shown only where the month turns over. The very
-    // first row of the range has nothing behind it, so it stays blank.
+    // Shown only where the month turns over. The very first row of the range
+    // has nothing behind it, so it stays blank.
     const showTot = i > 0 && monthOf(r) !== monthOf(rows[i - 1]);
     let totCell = '';
     if (showTot) {
-      const tWin = rows.slice(Math.max(0, i - 3), i + 1);
-      const tVals = tWin.map(w => w.change).filter(v => v !== null);
-      const tot = tVals.length ? tVals.reduce((s, v) => s + v, 0) : null;
-      const shortTot = tWin.length < 4;
-      if (shortTot) anyShort = true;
-      totCell = fmtLoss(tot) + (shortTot ? '<span class="wk-star">*</span>' : '');
+      anyMonth = true;
+      const ym = prevMonth(monthOf(r));
+      const mt = monthTotal(ym);
+      if (mt === null) {
+        totCell = '<span class="wk-nil" title="No weigh-in on or before '
+          + monthLabel(ym) + ' 1">\u2014</span>';
+      } else {
+        totCell = fmtLoss(mt.tot);
+        if (mt.gaps > 0) {
+          totCell += '<span class="wk-star" title="' + monthLabel(ym) + ': ' + mt.gaps
+            + ' unlogged day' + (mt.gaps === 1 ? '' : 's')
+            + ' behind an endpoint, held at TDEE">*</span>';
+          gapMonths.push(monthLabel(ym) + ' ' + mt.gaps);
+        }
+      }
     }
 
     const perDay = Math.round(r.intake / r.dayCount);
@@ -1513,14 +1563,13 @@ function renderWeekly() {
     return '<tr' + cls + '>'
       + '<td>' + label + '</td>'
       + '<td>' + fmtLoss(r.change) + '</td>'
-      + '<td>' + fmtLoss(avg) + avgStar + '</td>'
       + '<td>' + totCell + '</td>'
       + '<td class="wk-cal">' + perDay.toLocaleString() + '</td>'
       + '</tr>';
   }).join('');
 
   tblEl.innerHTML = '<table class="wk-table"><thead><tr>'
-    + '<th>Week<br>ending</th><th>Week</th><th>3wk avg<br>(ctr)</th><th>4wk<br>tot</th><th>Cal/day<br>(wk)</th>'
+    + '<th>Week<br>ending</th><th>Week</th><th>Prev mth<br>total</th><th>Cal/day<br>(wk)</th>'
     + '</tr></thead><tbody>' + body + '</tbody></table>';
 
   let notes = '';
@@ -1535,13 +1584,20 @@ function renderWeekly() {
       + 'Today is counted at ' + (weekTodayActual ? 'what is logged so far' : 'target')
       + '. Both the loss and cal/day figures move as the week fills in.</div>';
   }
-  notes += '<div class="wk-note"><b>4wk tot</b> is a trailing four-week total, printed on the '
-    + 'first row of each month as a rough monthly checkpoint.</div>';
-  if (anyShort) {
-    notes += '<div class="wk-note"><span class="wk-star">*</span> Window clipped \u2014 the figure covers '
-      + 'only the weeks available. The 3-week average is centred on its own row, so the first and last '
-      + 'rows are always short one side; the trailing total clips at the range start ('
-      + shortDate(graphStart()) + ').</div>';
+  if (anyMonth) {
+    notes += '<div class="wk-note"><b>Prev mth total</b> is the whole preceding calendar month, '
+      + '1st to 1st, printed on the first row that lands in a new month. It ignores the week '
+      + 'boundaries and reads outside the displayed range when it needs to.<br>'
+      + 'Two things spoil it. A <span class="wk-nil">\u2014</span> means there is no weigh-in on '
+      + 'or before that 1st, so the chain has nothing to start from. A '
+      + '<span class="wk-star">*</span> means an unlogged day sits between a weigh-in and one of '
+      + 'the two month ends, where it is held flat at TDEE and drags the figure toward zero. '
+      + 'Unlogged days with a weigh-in after them are harmless and are not counted.</div>';
+    if (gapMonths.length) {
+      notes += '<div class="wk-note"><span class="wk-star">*</span> Unlogged days behind an '
+        + 'endpoint \u2014 ' + gapMonths.join(', ') + '. These can sit just before the 1st rather '
+        + 'than inside the month.</div>';
+    }
   }
   const unlogged = unloggedInRange();
   if (unlogged.length > 0) {
@@ -1556,6 +1612,8 @@ function renderWeekly() {
 
 document.getElementById('toggle-week-today').addEventListener('change', (e) => {
   weekTodayActual = e.target.checked;
+  store.settings.weekTodayActual = weekTodayActual;
+  saveStore(store);
   renderWeekly();
 });
 
@@ -1751,6 +1809,7 @@ function showToast(msg) {
 // INIT
 // ============================================================
 renderDay();
+document.getElementById('toggle-week-today').checked = weekTodayActual;
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 
 if (!CanvasRenderingContext2D.prototype.roundRect) {
