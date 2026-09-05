@@ -1,5 +1,14 @@
 <!DOCTYPE html>
-<!-- FINAL VERSION BEFORE TESTING ADJUSTABLE WEEK START. THIS IS THE ONLY MODIFICATION THAT WAS MADE TO THIS FINAL VERSION JUST FOR VERSIONING PURPOSES -->
+<!-- ===========================================================
+     CHANGE LOG : one line per change, YYYY-MM-DD + what changed.
+     Newest at the bottom. Keep every entry to one compact line.
+     ===========================================================
+     2026-09-05  Baseline before adjustable week start work.
+                 Change log block added, no functional changes.
+     2026-09-05  Week start day now configurable in Settings (any
+                 day, default Mon). Weekend targets unchanged.
+     2026-09-05  Weekly tab: explainer text stripped, data kept.
+     =========================================================== -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -492,6 +501,14 @@ input[type="date"] { -webkit-appearance: none; }
     <div style="font-size:11px;color:var(--text-faint);margin-top:8px;font-family:var(--mono);line-height:1.5;">Day colours &mdash; <span style="color:var(--green);">green</span>: at or under target &middot; <span style="color:var(--yellow);">yellow</span>: over target but under TDEE &middot; <span style="color:var(--accent);">red</span>: over TDEE &middot; <span style="color:var(--purple);">purple</span>: never logged, shown as &quot;!&quot; and counted as TDEE so weight holds flat.</div>
   </div>
   <div class="setting-group">
+    <h3>// week</h3>
+    <div class="setting-row">
+      <label>Week starts on</label>
+      <select id="set-week-start"></select>
+    </div>
+    <div style="font-size:11px;color:var(--text-faint);margin-top:8px;font-family:var(--mono);line-height:1.5;">Re-slices the calendar grid and every weekly row, including past weeks. Weekend targets stay on Sat/Sun.</div>
+  </div>
+  <div class="setting-group">
     <h3>// ranges</h3>
     <div class="setting-row">
       <label>Calendar start</label>
@@ -578,7 +595,7 @@ function getStore() {
 
 function defaultStore() {
   return {
-    settings: { tdee: 2650, targetWeekday: 1250, targetWeekend: 1750, graphStart: addDays(todayStr(), -28), graphWeeks: 12, calStart: addDays(todayStr(), -28), calWeeks: 26, linkGraph: false, showProjection: true, weekTodayActual: false },
+    settings: { tdee: 2650, targetWeekday: 1250, targetWeekend: 1750, graphStart: addDays(todayStr(), -28), graphWeeks: 12, calStart: addDays(todayStr(), -28), calWeeks: 26, linkGraph: false, showProjection: true, weekTodayActual: false, weekStart: 1 },
     days: {}
   };
 }
@@ -634,6 +651,32 @@ function getTargetForDate(dateStr) {
 }
 
 function getTDEE() { return store.settings.tdee || 2650; }
+
+// ------------------------------------------------------------
+// WEEK START — which day a week is anchored on, 0=Sun .. 6=Sat.
+//
+// This is a display/slicing choice only. It decides where the calendar
+// grid breaks, where a weekly row opens and closes, and which points the
+// weight graph labels. It does NOT touch the weekend calorie target:
+// Saturday and Sunday are the weekend no matter where the week starts,
+// so getTargetForDate() stays hard-coded on 0 and 6 by design.
+//
+// Read with ?? rather than || — Sunday is 0, and || would silently
+// rewrite it to the Monday default and make it unselectable.
+// ------------------------------------------------------------
+function weekStartDay() {
+  const n = store.settings.weekStart;
+  return (Number.isInteger(n) && n >= 0 && n <= 6) ? n : 1;
+}
+
+// How many days a given date sits past the most recent week start.
+// 0 on the anchor day itself, 6 on the last day of the week.
+function daysIntoWeek(dateStr) {
+  return (parseDate(dateStr).getDay() - weekStartDay() + 7) % 7;
+}
+
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAY_ABBR2 = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 
 // ------------------------------------------------------------
 // DISPLAY RANGES — pure windowing, never affects calculation
@@ -1069,7 +1112,9 @@ function renderCalendar() {
     formatDate(startDate) + ' \u2192 ' + formatDate(endDate) + ' (' + calWeeks() + ' weeks)';
 
   const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const dowLabels = ['Mo','Tu','We','Th','Fr','Sa','Su'];
+  // Column headers rotated so the configured start day sits in column one.
+  const ws = weekStartDay();
+  const dowLabels = Array.from({ length: 7 }, (_, i) => DAY_ABBR2[(ws + i) % 7]);
 
   // Month grids spanning the window; cells outside it stay blank.
   const [sY, sM] = startDate.split('-').map(Number);
@@ -1092,8 +1137,8 @@ function renderCalendar() {
     grid.className = 'cal-grid';
     dowLabels.forEach(d => { const dow = document.createElement('div'); dow.className = 'cal-dow'; dow.textContent = d; grid.appendChild(dow); });
 
-    // Monday-first: shift JS Sunday-based day index back by one.
-    const firstDay = (new Date(m.year, m.month, 1).getDay() + 6) % 7;
+    // Leading blanks before the 1st: how far the 1st sits into its week.
+    const firstDay = (new Date(m.year, m.month, 1).getDay() - ws + 7) % 7;
     for (let i = 0; i < firstDay; i++) { const empty = document.createElement('div'); empty.className = 'cal-cell empty'; grid.appendChild(empty); }
 
     const daysInMonth = new Date(m.year, m.month + 1, 0).getDate();
@@ -1223,8 +1268,8 @@ function drawWeightChart(model, dates) {
     ctx.stroke();
     pastWeights.forEach(p => {
       const x = xScale(p.idx), y = yScale(p.w);
-      const dow = parseDate(p.date).getDay();
-      if (dow === 1) {
+      // Bigger labelled square on each week anchor day.
+      if (daysIntoWeek(p.date) === 0) {
         const sz = 5;
         const dotColor = p.isActual ? '#5b9bd5' : '#f0c040';
         ctx.fillStyle = dotColor; ctx.fillRect(x - sz, y - sz, sz * 2, sz * 2);
@@ -1326,14 +1371,15 @@ function drawCalorieChart(model, dates) {
 // ============================================================
 // WEEKLY
 //
-// One row per complete Monday-to-Monday week inside the graph range.
-// A row anchored on Monday M covers the seven days M-7 .. M-1, and its
-// weight change is weight(M-7) - weight(M), so positive means loss.
-// A partial week at the range start is skipped: the M-7 >= start test
+// One row per complete week inside the graph range. A week runs from the
+// configured start day (Settings) to the day before the next one.
+// A row anchored on A covers the seven days A-7 .. A-1, and its weight
+// change is weight(A-7) - weight(A), so positive means loss.
+// A partial week at the range start is skipped: the A-7 >= start test
 // drops it automatically.
 //
 // The week containing today is appended as an extra in-progress row. Its
-// closing Monday has not happened yet, so days that are still ahead are
+// closing anchor has not happened yet, so days that are still ahead are
 // counted at target and the closing weight is projected rather than read
 // off the scale. Everything else about the row is computed the same way.
 // ============================================================
@@ -1362,7 +1408,7 @@ function weekIntakeForDay(d, rec, today, tdee) {
   return target;
 }
 
-// Weight at the closing Monday of an in-progress week. The shared day model
+// Weight at the closing anchor of an in-progress week. The shared day model
 // seeds today from whatever is logged, which would put the loss column and
 // the cal/day column on different assumptions about the same day, so the
 // chain is rebuilt here under this panel's rules. An actual weigh-in landing
@@ -1385,10 +1431,10 @@ function buildWeeklyRows() {
   const tdee = getTDEE();
   const lastAllowed = end < today ? end : today;
 
-  // Walk forward to the first Monday at or after the range start.
+  // Walk forward to the first week anchor at or after the range start.
   let cur = start;
   let guard = 0;
-  while (parseDate(cur).getDay() !== 1 && guard++ < 7) cur = addDays(cur, 1);
+  while (daysIntoWeek(cur) !== 0 && guard++ < 7) cur = addDays(cur, 1);
 
   const rows = [];
   const addRow = (cur, prev, inProgress) => {
@@ -1408,7 +1454,7 @@ function buildWeeklyRows() {
       : (model[cur] && model[cur].weight ? model[cur].weight.w : null);
     const change = (wStart !== null && wEnd !== null) ? (wStart - wEnd) : null;
 
-    rows.push({ monday: cur, prevMonday: prev, change, intake, target,
+    rows.push({ anchor: cur, prevAnchor: prev, change, intake, target,
                 loggedCount, dayCount: days.length, inProgress });
   };
 
@@ -1418,12 +1464,11 @@ function buildWeeklyRows() {
     cur = addDays(cur, 7);
   }
 
-  // The week today sits inside. Its closing Monday is still ahead, so the
+  // The week today sits inside. Its closing anchor is still ahead, so the
   // loop above cannot reach it. Only shown when today falls in the range.
   if (today >= start && today <= end) {
-    const dow = parseDate(today).getDay();
-    const backToMonday = dow === 0 ? 6 : dow - 1;   // Sunday closes the week
-    const curStart = addDays(today, -backToMonday);
+    const backToStart = daysIntoWeek(today);
+    const curStart = addDays(today, -backToStart);
     if (curStart >= start) addRow(addDays(curStart, 7), curStart, true);
   }
 
@@ -1458,8 +1503,8 @@ function renderWeekly() {
   const tblEl = document.getElementById('weekly-table');
   const noteEl = document.getElementById('weekly-notes');
 
-  capEl.innerHTML = 'Loss table \u2014 a plain number is weight lost, a + is weight gained.<br>'
-    + shortDate(graphStart()) + ' \u2192 ' + shortDate(graphEnd()) + ' (' + graphWeeks() + ' weeks)';
+  capEl.innerHTML = shortDate(graphStart()) + ' \u2192 ' + shortDate(graphEnd())
+    + ' (' + graphWeeks() + ' weeks)';
 
   // The toggle only means anything while a partial week is on screen.
   const current = rows.find(r => r.inProgress);
@@ -1525,8 +1570,9 @@ function renderWeekly() {
 
   let anyMonth = false;
   const gapMonths = [];
-  const sundayOf = (r) => addDays(r.monday, -1);
-  const monthOf = (r) => sundayOf(r).slice(0, 7);
+  // Last day of the row's week — the anchor is exclusive, so back up one.
+  const lastDayOf = (r) => addDays(r.anchor, -1);
+  const monthOf = (r) => lastDayOf(r).slice(0, 7);
 
   const body = rows.map((r, i) => {
     // Shown only where the month turns over. The very first row of the range
@@ -1554,9 +1600,9 @@ function renderWeekly() {
     const perDay = Math.round(r.intake / r.dayCount);
     const isLatest = i === rows.length - 1 && !r.inProgress;
 
-    // The row is labelled by the Sunday that closes the week. Every figure
-    // above still keys off the Monday anchor; this is presentation only.
-    const label = shortDate(sundayOf(r))
+    // The row is labelled by the day that closes the week. Every figure
+    // above still keys off the anchor; this is presentation only.
+    const label = shortDate(lastDayOf(r))
       + (r.inProgress ? '<span class="wk-tag">in progress</span>' : '');
 
     const cls = r.inProgress ? ' class="is-current"' : (isLatest ? ' class="is-latest"' : '');
@@ -1573,40 +1619,23 @@ function renderWeekly() {
     + '<th>Week<br>ending</th><th>Week</th><th>Prev mth<br>total</th><th>Cal/day<br>(wk)</th>'
     + '</tr></thead><tbody>' + body + '</tbody></table>';
 
+  // Notes are data only. The explainers that used to live here were removed;
+  // the \u2014 and * cells still carry their meaning in title tooltips.
   let notes = '';
   if (current) {
-    const remaining = dateRange(current.prevMonday, addDays(current.monday, -1))
+    const remaining = dateRange(current.prevAnchor, addDays(current.anchor, -1))
       .filter(d => d > todayStr()).length;
-    notes += '<div class="wk-note"><b>Week ending ' + shortDate(addDays(current.monday, -1))
-      + ' is still in progress.</b><br>'
-      + (remaining > 0
-          ? remaining + ' remaining ' + (remaining === 1 ? 'day is' : 'days are') + ' counted at target. '
-          : '')
-      + 'Today is counted at ' + (weekTodayActual ? 'what is logged so far' : 'target')
-      + '. Both the loss and cal/day figures move as the week fills in.</div>';
-  }
-  if (anyMonth) {
-    notes += '<div class="wk-note"><b>Prev mth total</b> is the whole preceding calendar month, '
-      + '1st to 1st, printed on the first row that lands in a new month. It ignores the week '
-      + 'boundaries and reads outside the displayed range when it needs to.<br>'
-      + 'Two things spoil it. A <span class="wk-nil">\u2014</span> means there is no weigh-in on '
-      + 'or before that 1st, so the chain has nothing to start from. A '
-      + '<span class="wk-star">*</span> means an unlogged day sits between a weigh-in and one of '
-      + 'the two month ends, where it is held flat at TDEE and drags the figure toward zero. '
-      + 'Unlogged days with a weigh-in after them are harmless and are not counted.</div>';
-    if (gapMonths.length) {
-      notes += '<div class="wk-note"><span class="wk-star">*</span> Unlogged days behind an '
-        + 'endpoint \u2014 ' + gapMonths.join(', ') + '. These can sit just before the 1st rather '
-        + 'than inside the month.</div>';
-    }
+    const parts = [];
+    if (remaining > 0) parts.push(remaining + 'd ahead at target');
+    parts.push('today at ' + (weekTodayActual ? 'logged' : 'target'));
+    notes += '<div class="wk-note">In progress \u2014 ' + parts.join(', ') + '.</div>';
   }
   const unlogged = unloggedInRange();
   if (unlogged.length > 0) {
     const shown = unlogged.slice(0, 12).map(shortDate).join(', ');
-    const more = unlogged.length > 12 ? ' +' + (unlogged.length - 12) + ' more' : '';
-    notes += '<div class="wk-note"><b>' + unlogged.length + ' unlogged '
-      + (unlogged.length === 1 ? 'day' : 'days') + ' counted at TDEE ('
-      + getTDEE().toLocaleString() + '):</b><br>' + shown + more + '</div>';
+    const more = unlogged.length > 12 ? ' +' + (unlogged.length - 12) : '';
+    notes += '<div class="wk-note"><b>' + unlogged.length + ' unlogged @ TDEE '
+      + getTDEE().toLocaleString() + ':</b> ' + shown + more + '</div>';
   }
   noteEl.innerHTML = notes;
 }
@@ -1635,6 +1664,17 @@ let suppressAutosave = false;
     sel.appendChild(o);
   }
 });
+
+// Week start picker: all seven days, value is the JS day index.
+(function() {
+  const sel = document.getElementById('set-week-start');
+  DAY_NAMES.forEach((name, i) => {
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = name;
+    sel.appendChild(o);
+  });
+})();
 
 // Calorie target pickers: 800\u20134000 in 50s, same wheel/dropdown treatment.
 ['set-target-weekday', 'set-target-weekend'].forEach(id => {
@@ -1689,6 +1729,7 @@ function loadSettings() {
   ensureCalOption(weSel, s.targetWeekend || 1750);
   wdSel.value = s.targetWeekday || 1250;
   weSel.value = s.targetWeekend || 1750;
+  document.getElementById('set-week-start').value = weekStartDay();
   document.getElementById('set-cal-start').value = calStart();
   document.getElementById('set-cal-weeks').value = calWeeks();
   document.getElementById('set-link-graph').checked = !!s.linkGraph;
@@ -1712,6 +1753,9 @@ function saveSettingsNow() {
   store.settings.tdee = parseInt(document.getElementById('set-tdee').value) || store.settings.tdee;
   store.settings.targetWeekday = parseInt(document.getElementById('set-target-weekday').value) || 1250;
   store.settings.targetWeekend = parseInt(document.getElementById('set-target-weekend').value) || 1750;
+  // parseInt, not ||, so Sunday (0) survives the round trip.
+  const wsVal = parseInt(document.getElementById('set-week-start').value);
+  store.settings.weekStart = (wsVal >= 0 && wsVal <= 6) ? wsVal : 1;
   store.settings.calStart = document.getElementById('set-cal-start').value || addDays(todayStr(), -28);
   store.settings.calWeeks = clampWeeks(document.getElementById('set-cal-weeks').value, 26);
   store.settings.linkGraph = document.getElementById('set-link-graph').checked;
@@ -1726,7 +1770,7 @@ function saveSettingsNow() {
   updateWeeklyProjection(); renderDay();
 }
 
-['set-tdee', 'set-target-weekday', 'set-target-weekend', 'set-graph-start', 'set-graph-weeks']
+['set-tdee', 'set-target-weekday', 'set-target-weekend', 'set-graph-start', 'set-graph-weeks', 'set-week-start']
   .forEach(id => document.getElementById(id).addEventListener('change', saveSettingsNow));
 
 function updateWeeklyProjection() {
