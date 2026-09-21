@@ -8,6 +8,11 @@
      2026-09-05  Week start day now configurable in Settings (any
                  day, default Mon). Weekend targets unchanged.
      2026-09-05  Weekly tab: explainer text stripped, data kept.
+     2026-09-21  Weight popup: "Use in calculations" toggle. Unused
+                 weights are ignored everywhere, shown light blue.
+     2026-09-21  Food entry: all dash types read as minus, dash may
+                 be spaced or attached; leading number also parsed,
+                 trailing number wins when both present.
      =========================================================== -->
 <html lang="en">
 <head>
@@ -334,6 +339,7 @@ input[type="date"] { -webkit-appearance: none; }
 .cal-cell .cal-weight.actual { color: #4ecca3; }
 .cal-cell .cal-weight.calculated { color: #8892a4; }
 .cal-cell .cal-weight.projected { color: rgba(78,204,163,0.5); }
+.cal-cell .cal-weight.info { color: #5dade2; }
 .cal-cell .cal-day-num { font-weight: 600; font-size: 12px; }
 .cal-cell .cal-day-cals { font-size: 9px; opacity: 0.8; }
 
@@ -368,6 +374,7 @@ input[type="date"] { -webkit-appearance: none; }
 .modal-input-wrap input:focus { border-color: var(--accent); }
 .modal-input-wrap .weight-unit { color: var(--text-dim); font-family: var(--mono); font-size: 14px; }
 .modal-buttons { display: flex; gap: 8px; }
+.modal-use-row { justify-content: space-between; margin: -6px 0 20px; }
 .modal-buttons .btn { flex: 1; }
 </style>
 </head>
@@ -562,6 +569,10 @@ input[type="date"] { -webkit-appearance: none; }
       <input type="number" id="weight-modal-input" placeholder="—" step="0.1" inputmode="decimal">
       <span class="weight-unit">lbs</span>
     </div>
+    <label class="proj-toggle modal-use-row">
+      <span class="lbl">Use in calculations</span>
+      <span class="switch"><input type="checkbox" id="weight-modal-use" checked><span class="track"></span></span>
+    </label>
     <div class="modal-buttons">
       <button class="btn btn-outline" id="weight-modal-cancel">Cancel</button>
       <button class="btn btn-danger btn-sm" id="weight-modal-clear" style="display:none;">Clear</button>
@@ -632,9 +643,21 @@ function getDay(store, dateStr) {
   return store.days[dateStr];
 }
 
+// A weight only anchors the calculations when it hasn't been marked
+// informational. Old entries have no flag, so they count as used.
+function usedWeight(day) {
+  return (day && day.weight && !day.weightInfo) ? day.weight : null;
+}
+
+// Phones often swap the typed hyphen for an en dash, em dash or minus
+// sign. Fold them all back to a plain '-' before parsing any calories.
+function normalizeDashes(str) {
+  return String(str).replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-');
+}
+
 function evalCalExpr(expr) {
   try {
-    const cleaned = String(expr).replace(/[^0-9+\-*/().]/g, '');
+    const cleaned = normalizeDashes(expr).replace(/[^0-9+\-*/().]/g, '');
     if (!cleaned) return 0;
     const val = Function('"use strict"; return (' + cleaned + ')')();
     return Number.isFinite(val) ? Math.round(val) : 0;
@@ -725,7 +748,7 @@ function buildDayModel(reachBack) {
 
   // Nearest actual weigh-in at or before displayMin; if none exists, the
   // chain simply stays empty until the first weigh-in inside the window.
-  const weighIns = Object.keys(store.days).filter(d => store.days[d] && store.days[d].weight).sort();
+  const weighIns = Object.keys(store.days).filter(d => usedWeight(store.days[d])).sort();
   let anchor = null;
   for (let i = weighIns.length - 1; i >= 0; i--) {
     if (weighIns[i] <= displayMin) { anchor = weighIns[i]; break; }
@@ -748,7 +771,7 @@ function buildDayModel(reachBack) {
     const target = getTargetForDate(d);
 
     let weight = null;
-    if (day && day.weight) {
+    if (usedWeight(day)) {
       currentWeight = day.weight;
       weight = { w: currentWeight, type: 'actual' };
     } else if (currentWeight !== null && prevEaten !== null) {
@@ -761,6 +784,8 @@ function buildDayModel(reachBack) {
       logged, eaten, target,
       penalty: isPast && !logged,
       weight,
+      // Informational weigh-in: shown on the calendar only, never used.
+      infoWeight: (day && day.weight && day.weightInfo) ? day.weight : null,
       drinks: !!(day && day.drinks === true)
     };
 
@@ -954,7 +979,7 @@ document.getElementById('food-name').addEventListener('keydown', e => { if (e.ke
 
 function addFood() {
   const nameEl = document.getElementById('food-name');
-  let raw = nameEl.value.trim();
+  let raw = normalizeDashes(nameEl.value).trim();
   if (!raw) return;
 
   // Value-only quick entry: whole input is a pure math expression (digits, + - * / ( ) . spaces).
@@ -974,16 +999,17 @@ function addFood() {
   let name = raw;
   let expr = '';
 
-  // Try to parse trailing math expression from name: "chicken 170*3" or "walk -200"
-  const match = raw.match(/^(.+?)\s+([-+]?[\d(][\d+\-*/().]*\)?)$/);
-  if (match) {
-    const possibleName = match[1].trim();
-    const possibleExpr = match[2].trim();
-    const val = evalCalExpr(possibleExpr);
-    if (val !== 0) {
-      name = possibleName;
-      expr = possibleExpr;
-    }
+  // Calories can sit at the end ("chicken 170*3", "adjust -100",
+  // "adjust - 100", "adjust-100") or at the front ("450 lunch",
+  // "-100 adjust"). If both ends have a number, the end one wins.
+  const tail = raw.match(/^(.+?)(?:\s+|(?=[-+]))([-+]?\s*[\d(][\d+\-*/().]*)$/);
+  const head = raw.match(/^([-+]?\s*[\d(][\d+\-*/().]*)\s+(.+)$/);
+  const candidates = [];
+  if (tail) candidates.push([tail[1], tail[2]]);
+  if (head) candidates.push([head[2], head[1]]);
+  for (const [possibleName, possibleExpr] of candidates) {
+    const n = possibleName.trim(), e = possibleExpr.trim();
+    if (n && evalCalExpr(e) !== 0) { name = n; expr = e; break; }
   }
 
   let cal = evalCalExpr(expr);
@@ -1022,6 +1048,7 @@ function openWeightModal(dateStr) {
   const hasWeight = day && day.weight;
   document.getElementById('weight-modal-date').textContent = formatDate(dateStr);
   document.getElementById('weight-modal-input').value = hasWeight ? day.weight : '';
+  document.getElementById('weight-modal-use').checked = !(hasWeight && day.weightInfo);
   document.getElementById('weight-modal-clear').style.display = hasWeight ? 'block' : 'none';
   document.getElementById('weight-modal').classList.add('show');
   setTimeout(() => document.getElementById('weight-modal-input').focus(), 100);
@@ -1036,15 +1063,19 @@ document.getElementById('weight-modal-save').addEventListener('click', () => {
   if (!weightModalDate) return;
   const val = parseFloat(document.getElementById('weight-modal-input').value);
   const day = getDay(store, weightModalDate);
+  const use = document.getElementById('weight-modal-use').checked;
   day.weight = isNaN(val) ? null : val;
+  if (day.weight !== null && !use) day.weightInfo = true;
+  else delete day.weightInfo;
   saveStore(store); closeWeightModal(); renderCalendar();
-  showToast(isNaN(val) ? 'Weight cleared' : val + ' lbs saved');
+  showToast(isNaN(val) ? 'Weight cleared' : val + ' lbs saved' + (use ? '' : ' (info only)'));
 });
 
 document.getElementById('weight-modal-clear').addEventListener('click', () => {
   if (!weightModalDate) return;
   const day = getDay(store, weightModalDate);
   day.weight = null;
+  delete day.weightInfo;
   saveStore(store); closeWeightModal(); renderCalendar();
   showToast('Weight cleared');
 });
@@ -1169,7 +1200,8 @@ function renderCalendar() {
       cell.innerHTML = html;
 
       if (rec.drinks) cell.innerHTML += '<span class="cal-drink">\uD83C\uDF7A</span>';
-      if (rec.weight) cell.innerHTML += `<span class="cal-weight ${rec.weight.type}">${rec.weight.w.toFixed(1)}</span>`;
+      if (rec.infoWeight) cell.innerHTML += `<span class="cal-weight info">${Number(rec.infoWeight).toFixed(1)}</span>`;
+      else if (rec.weight) cell.innerHTML += `<span class="cal-weight ${rec.weight.type}">${rec.weight.w.toFixed(1)}</span>`;
 
       attachCellGestures(cell, dateStr);
       grid.appendChild(cell);
@@ -1547,7 +1579,7 @@ function renderWeekly() {
   // month total is untouched. Only the gaps that genuinely move a number get
   // flagged, otherwise the star fires constantly and stops meaning anything.
   const weighInDates = Object.keys(store.days)
-    .filter(d => store.days[d] && store.days[d].weight).sort();
+    .filter(d => usedWeight(store.days[d])).sort();
 
   function gapsBehind(endpoint) {
     let anchor = null;
