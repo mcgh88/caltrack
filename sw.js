@@ -1,10 +1,9 @@
-const CACHE_NAME = 'caltrack-v2';
+const CACHE_NAME = 'caltrack-v3';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  './icon-192.png'
 ];
 
 self.addEventListener('install', (e) => {

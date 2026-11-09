@@ -13,6 +13,18 @@
      2026-09-21  Food entry: all dash types read as minus, dash may
                  be spaced or attached; leading number also parsed,
                  trailing number wins when both present.
+     2026-11-08  Graph: weight labels thinned to ~6 across any span,
+                 latest week always labelled.
+     2026-11-08  Cal and Week tabs open scrolled to today.
+     2026-11-08  Week tab: title, range and toggle pinned at top.
+     2026-11-08  One shared range for Cal, Graph and Week; graph
+                 start/weeks and the link toggle removed.
+     2026-11-08  Settings // weeks: Cal/day column toggle, total
+                 column month (1st-1st) or 4-week blocks; totals now
+                 sit on the row where their period closes.
+     2026-11-08  Weekly loss goal + Check goal popup (on track /
+                 catch up today or spread / can't catch up).
+     2026-11-08  sw.js: dropped missing icon-512 from precache.
      =========================================================== -->
 <html lang="en">
 <head>
@@ -309,6 +321,32 @@ input[type="date"] { -webkit-appearance: none; }
 .wk-note .wk-star { color: var(--yellow); }
 .wk-note b { color: var(--text-dim); font-weight: 600; }
 
+.set-note { font-size:11px; color:var(--text-faint); margin-top:-2px; margin-bottom:10px; font-family:var(--mono); line-height:1.5; }
+.set-note:last-child { margin-bottom: 0; }
+.set-divider { margin-top:14px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06); }
+
+/* Week tab: title, range and controls stay pinned while rows scroll.
+   The panel has 20px top padding, so the block pulls up into it and sticks
+   at the very top edge; the table header sticks just below it (JS sets
+   --wk-head to the block's height). */
+.wk-sticky {
+  position: sticky; top: -20px; z-index: 6;
+  background: var(--bg); margin-top: -20px; padding-top: 20px; padding-bottom: 2px;
+}
+.wk-sticky .panel-header { margin-bottom: 8px; }
+.wk-table th { top: calc(var(--wk-head, 0px) - 20px); }
+.wk-controls .btn { margin-left: auto; }
+
+/* Goal popup */
+.goal-body { font-family: var(--mono); font-size: 13px; line-height: 1.6; color: var(--text); margin-bottom: 20px; }
+.goal-body .goal-head { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+.goal-body .goal-head.ok { color: var(--green); }
+.goal-body .goal-head.behind { color: var(--yellow); }
+.goal-body .goal-head.no { color: var(--accent); }
+.goal-body .goal-opt { background: var(--bg); border-radius: 8px; padding: 10px 12px; margin-top: 8px; }
+.goal-body .goal-opt b { color: var(--text-dim); font-weight: 600; display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
+.goal-body .goal-dim { color: var(--text-dim); }
+
 .danger-zone { margin-top: 24px; }
 .btn-danger { background: rgba(233,69,96,0.15); color: var(--accent); border: 1px solid var(--accent); }
 
@@ -461,13 +499,16 @@ input[type="date"] { -webkit-appearance: none; }
 
 <!-- WEEKLY PANEL -->
 <div class="panel" id="panel-weekly">
-  <div class="panel-header">Weekly</div>
-  <div class="wk-caption" id="weekly-caption"></div>
-  <div class="wk-controls" id="weekly-controls" style="display:none;">
-    <label class="proj-toggle" style="margin-left:0;">
-      <span class="lbl">Count today as logged</span>
-      <span class="switch"><input type="checkbox" id="toggle-week-today"><span class="track"></span></span>
-    </label>
+  <div class="wk-sticky" id="weekly-sticky">
+    <div class="panel-header">Weekly</div>
+    <div class="wk-caption" id="weekly-caption"></div>
+    <div class="wk-controls" id="weekly-controls" style="display:none;">
+      <label class="proj-toggle" style="margin-left:0;">
+        <span class="lbl">Count today as logged</span>
+        <span class="switch"><input type="checkbox" id="toggle-week-today"><span class="track"></span></span>
+      </label>
+      <button class="btn btn-sm btn-outline" id="check-goal-btn">Check goal</button>
+    </div>
   </div>
   <div id="weekly-table"></div>
   <div id="weekly-notes"></div>
@@ -508,36 +549,47 @@ input[type="date"] { -webkit-appearance: none; }
     <div style="font-size:11px;color:var(--text-faint);margin-top:8px;font-family:var(--mono);line-height:1.5;">Day colours &mdash; <span style="color:var(--green);">green</span>: at or under target &middot; <span style="color:var(--yellow);">yellow</span>: over target but under TDEE &middot; <span style="color:var(--accent);">red</span>: over TDEE &middot; <span style="color:var(--purple);">purple</span>: never logged, shown as &quot;!&quot; and counted as TDEE so weight holds flat.</div>
   </div>
   <div class="setting-group">
-    <h3>// week</h3>
+    <h3>// weeks</h3>
     <div class="setting-row">
       <label>Week starts on</label>
       <select id="set-week-start"></select>
     </div>
-    <div style="font-size:11px;color:var(--text-faint);margin-top:8px;font-family:var(--mono);line-height:1.5;">Re-slices the calendar grid and every weekly row, including past weeks. Weekend targets stay on Sat/Sun.</div>
+    <div class="set-note">Re-slices the calendar grid and every weekly row, including past weeks. Weekend targets stay on Sat/Sun.</div>
+    <div class="setting-row set-divider">
+      <label>Cal/day column</label>
+      <span class="switch"><input type="checkbox" id="set-show-calday"><span class="track"></span></span>
+    </div>
+    <div class="setting-row">
+      <label>Total column</label>
+      <span class="switch"><input type="checkbox" id="set-four-week"><span class="track"></span></span>
+    </div>
+    <div class="set-note" id="set-four-week-note"></div>
+    <div class="setting-row set-divider">
+      <label>Weekly loss goal (lbs)</label>
+      <input type="number" id="set-weekly-goal" placeholder="none" step="0.1" inputmode="decimal">
+    </div>
+    <div class="set-note">Used by Check goal on the Week tab. Today counts as logged or at target, following the &quot;Count today as logged&quot; toggle there.</div>
+    <div class="setting-row">
+      <label>Show spare calories when ahead</label>
+      <span class="switch"><input type="checkbox" id="set-goal-spare"><span class="track"></span></span>
+    </div>
+    <div class="setting-row">
+      <label>Catch-up spread</label>
+      <span class="switch"><input type="checkbox" id="set-goal-cut"><span class="track"></span></span>
+    </div>
+    <div class="set-note" id="set-goal-cut-note"></div>
   </div>
   <div class="setting-group">
-    <h3>// ranges</h3>
+    <h3>// range</h3>
     <div class="setting-row">
-      <label>Calendar start</label>
+      <label>Start</label>
       <input type="date" id="set-cal-start">
     </div>
     <div class="setting-row">
-      <label>Calendar weeks</label>
+      <label>Weeks</label>
       <select id="set-cal-weeks"></select>
     </div>
-    <div class="setting-row" style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);">
-      <label>Graph copies calendar range</label>
-      <span class="switch"><input type="checkbox" id="set-link-graph"><span class="track"></span></span>
-    </div>
-    <div class="setting-row">
-      <label>Graph start</label>
-      <input type="date" id="set-graph-start">
-    </div>
-    <div class="setting-row">
-      <label>Graph weeks</label>
-      <select id="set-graph-weeks"></select>
-    </div>
-    <div style="font-size:11px;color:var(--text-faint);margin-top:8px;font-family:var(--mono);line-height:1.5;">Each view shows only its own window. The calendar renders nothing before its start date. Turn on the toggle to lock the graph to the calendar window; turn it off to set the graph separately. Calculations always run across whatever these windows cover.</div>
+    <div class="set-note">One window for the calendar, the graph and the weekly table. Nothing before the start date is shown.</div>
   </div>
   <div class="setting-group danger-zone">
     <h3>// data</h3>
@@ -581,6 +633,18 @@ input[type="date"] { -webkit-appearance: none; }
   </div>
 </div>
 
+<!-- GOAL MODAL -->
+<div class="modal-overlay" id="goal-modal">
+  <div class="modal">
+    <div class="modal-title">Weekly Goal</div>
+    <div class="modal-subtitle" id="goal-modal-sub"></div>
+    <div class="goal-body" id="goal-modal-body"></div>
+    <div class="modal-buttons">
+      <button class="btn btn-green" id="goal-modal-ok">OK</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -606,7 +670,8 @@ function getStore() {
 
 function defaultStore() {
   return {
-    settings: { tdee: 2650, targetWeekday: 1250, targetWeekend: 1750, graphStart: addDays(todayStr(), -28), graphWeeks: 12, calStart: addDays(todayStr(), -28), calWeeks: 26, linkGraph: false, showProjection: true, weekTodayActual: false, weekStart: 1 },
+    settings: { tdee: 2650, targetWeekday: 1250, targetWeekend: 1750, calStart: addDays(todayStr(), -28), calWeeks: 26, showProjection: true, weekTodayActual: false, weekStart: 1,
+                showCalDay: true, fourWeekTotal: false, weeklyGoal: null, goalShowSpare: true, goalSpreadCut: false },
     days: {}
   };
 }
@@ -704,9 +769,11 @@ const DAY_ABBR2 = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 // ------------------------------------------------------------
 // DISPLAY RANGES — pure windowing, never affects calculation
 // ------------------------------------------------------------
-function graphStart() { return store.settings.graphStart || addDays(todayStr(), -28); }
-function graphWeeks() { return store.settings.graphWeeks || 12; }
-function graphEnd() { return addDays(graphStart(), graphWeeks() * 7 - 1); }
+// One range drives the calendar, the graph and the weekly table. The old
+// separate graph window (graphStart/graphWeeks/linkGraph) is ignored now.
+function graphStart() { return calStart(); }
+function graphWeeks() { return calWeeks(); }
+function graphEnd() { return calEnd(); }
 
 function showProjection() { return store.settings.showProjection !== false; }
 
@@ -848,8 +915,11 @@ function switchToTab(tab) {
     weekTodayActual = store.settings.weekTodayActual === true;
     document.getElementById('toggle-week-today').checked = weekTodayActual;
     renderWeekly();
+    // The current week is the last row, so open at the bottom.
+    const wp = document.getElementById('panel-weekly');
+    wp.scrollTop = wp.scrollHeight;
   }
-  if (tab === 'calendar') renderCalendar();
+  if (tab === 'calendar') { renderCalendar(); scrollCalendarToToday(); }
   if (tab === 'settings') loadSettings();
   if (tab === 'day') renderDay();
 }
@@ -1131,6 +1201,18 @@ function attachCellGestures(cell, dateStr) {
   });
 }
 
+// Opening the Cal tab lands on the month holding today. Only done on tab
+// open, not on every re-render, so saving a weight doesn't jump the view.
+function scrollCalendarToToday() {
+  const panel = document.getElementById('panel-calendar');
+  const cell = panel.querySelector('.cal-cell.today-cell');
+  if (!cell) { panel.scrollTop = 0; return; }
+  const grid = cell.closest('.cal-grid');
+  const header = grid && grid.previousElementSibling;
+  const target = header || cell;
+  panel.scrollTop += target.getBoundingClientRect().top - panel.getBoundingClientRect().top - 8;
+}
+
 function renderCalendar() {
   const container = document.getElementById('calendar-grid');
   container.innerHTML = '';
@@ -1298,10 +1380,15 @@ function drawWeightChart(model, dates) {
     ctx.strokeStyle = '#e94560'; ctx.lineWidth = 2; ctx.beginPath();
     pastWeights.forEach((p, i) => { const x = xScale(p.idx), y = yScale(p.w); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
     ctx.stroke();
+    // Labelled squares go on every Nth week anchor so roughly six show
+    // whatever the span (26 weeks -> every 4th). Counted back from the latest
+    // anchor so the most recent week is always labelled.
+    const labelStep = Math.max(1, Math.round(graphWeeks() / 6));
+    const anchors = pastWeights.filter(p => daysIntoWeek(p.date) === 0).map(p => p.date);
+    const labelled = new Set(anchors.filter((d, i) => (anchors.length - 1 - i) % labelStep === 0));
     pastWeights.forEach(p => {
       const x = xScale(p.idx), y = yScale(p.w);
-      // Bigger labelled square on each week anchor day.
-      if (daysIntoWeek(p.date) === 0) {
+      if (labelled.has(p.date)) {
         const sz = 5;
         const dotColor = p.isActual ? '#5b9bd5' : '#f0c040';
         ctx.fillStyle = dotColor; ctx.fillRect(x - sz, y - sz, sz * 2, sz * 2);
@@ -1602,32 +1689,49 @@ function renderWeekly() {
 
   let anyMonth = false;
   const gapMonths = [];
-  // Last day of the row's week — the anchor is exclusive, so back up one.
+  // Last day of the row's week; the anchor is exclusive, so back up one.
   const lastDayOf = (r) => addDays(r.anchor, -1);
-  const monthOf = (r) => lastDayOf(r).slice(0, 7);
+  const today = todayStr();
+  const fourWeek = store.settings.fourWeekTotal === true;
+  const showCalDay = store.settings.showCalDay !== false;
+
+  // A total sits on the row where its period closes, and stays blank until
+  // that closing day has passed, so it never shows a half-finished number.
+  //   month:  the week holding the month's last day, i.e. the row whose
+  //           first day and closing anchor fall in different months.
+  //   4-week: every 4th row counted from the range start.
+  function totalFor(r, i) {
+    let open, close, tag;
+    if (fourWeek) {
+      if ((i + 1) % 4 !== 0) return null;
+      open = rows[i - 3].prevAnchor; close = r.anchor;
+      tag = '4 wks to ' + shortDate(lastDayOf(r));
+    } else {
+      const ym = r.prevAnchor.slice(0, 7);
+      if (r.anchor.slice(0, 7) === ym) return null;   // month doesn't close in this week
+      open = firstOf(ym); close = firstOf(nextMonth(ym));
+      tag = monthLabel(ym);
+    }
+    if (addDays(close, -1) >= today) return { cell: '' };
+    const wOpen = weightOn(open), wClose = weightOn(close);
+    if (wOpen === null || wClose === null) {
+      return { cell: '<span class="wk-nil" title="No weigh-in on or before ' + shortDate(open) + '">—</span>' };
+    }
+    const gaps = new Set([...gapsBehind(open), ...gapsBehind(close)]).size;
+    let cell = fmtLoss(wOpen - wClose);
+    if (gaps > 0) {
+      cell += '<span class="wk-star" title="' + tag + ': ' + gaps
+        + ' unlogged day' + (gaps === 1 ? '' : 's')
+        + ' behind an endpoint, held at TDEE">*</span>';
+      gapMonths.push(tag + ' ' + gaps);
+    }
+    return { cell };
+  }
 
   const body = rows.map((r, i) => {
-    // Shown only where the month turns over. The very first row of the range
-    // has nothing behind it, so it stays blank.
-    const showTot = i > 0 && monthOf(r) !== monthOf(rows[i - 1]);
-    let totCell = '';
-    if (showTot) {
-      anyMonth = true;
-      const ym = prevMonth(monthOf(r));
-      const mt = monthTotal(ym);
-      if (mt === null) {
-        totCell = '<span class="wk-nil" title="No weigh-in on or before '
-          + monthLabel(ym) + ' 1">\u2014</span>';
-      } else {
-        totCell = fmtLoss(mt.tot);
-        if (mt.gaps > 0) {
-          totCell += '<span class="wk-star" title="' + monthLabel(ym) + ': ' + mt.gaps
-            + ' unlogged day' + (mt.gaps === 1 ? '' : 's')
-            + ' behind an endpoint, held at TDEE">*</span>';
-          gapMonths.push(monthLabel(ym) + ' ' + mt.gaps);
-        }
-      }
-    }
+    const tot = totalFor(r, i);
+    if (tot) anyMonth = true;
+    const totCell = tot ? tot.cell : '';
 
     const perDay = Math.round(r.intake / r.dayCount);
     const isLatest = i === rows.length - 1 && !r.inProgress;
@@ -1643,13 +1747,16 @@ function renderWeekly() {
       + '<td>' + label + '</td>'
       + '<td>' + fmtLoss(r.change) + '</td>'
       + '<td>' + totCell + '</td>'
-      + '<td class="wk-cal">' + perDay.toLocaleString() + '</td>'
+      + (showCalDay ? '<td class="wk-cal">' + perDay.toLocaleString() + '</td>' : '')
       + '</tr>';
   }).join('');
 
   tblEl.innerHTML = '<table class="wk-table"><thead><tr>'
-    + '<th>Week<br>ending</th><th>Week</th><th>Prev mth<br>total</th><th>Cal/day<br>(wk)</th>'
+    + '<th>Week<br>ending</th><th>Week</th>'
+    + (fourWeek ? '<th>4 wk<br>total</th>' : '<th>Prev mth<br>total</th>')
+    + (showCalDay ? '<th>Cal/day<br>(wk)</th>' : '')
     + '</tr></thead><tbody>' + body + '</tbody></table>';
+  setWeeklyHeadOffset();
 
   // Notes are data only. The explainers that used to live here were removed;
   // the \u2014 and * cells still carry their meaning in title tooltips.
@@ -1679,6 +1786,151 @@ document.getElementById('toggle-week-today').addEventListener('change', (e) => {
   renderWeekly();
 });
 
+// The table header sticks just under the pinned title block, whose height
+// changes when the controls row shows or hides.
+function setWeeklyHeadOffset() {
+  const h = document.getElementById('weekly-sticky').offsetHeight;
+  document.getElementById('weekly-table').style.setProperty('--wk-head', h + 'px');
+}
+window.addEventListener('resize', setWeeklyHeadOffset);
+
+// ============================================================
+// WEEKLY GOAL CHECK
+//
+// Projects this week the same way the in-progress row does (past days as
+// logged or TDEE, today per the Count-today toggle, later days at target),
+// compares the loss to the manual goal, and if short works out how to close
+// the gap. Days that can still change: every day after today, plus today
+// when it isn't counted as logged. Today can't go below what's already logged.
+// ============================================================
+const SHORT_DAY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const dayTag = (d) => SHORT_DAY[parseDate(d).getDay()] + ' ' + shortDate(d);
+const fmtCal = (n) => Math.round(n).toLocaleString();
+
+// Share `allowed` calories across days so each gets the same amount, never
+// below its floor. Days whose floor is above the even share are pinned there.
+function spreadEvenCap(days, allowed) {
+  const out = {};
+  let free = days.slice(), budget = allowed;
+  for (;;) {
+    const cap = budget / free.length;
+    const pinned = free.filter(x => x.floor > cap);
+    if (pinned.length === 0) { free.forEach(x => out[x.d] = Math.floor(cap)); break; }
+    pinned.forEach(x => { out[x.d] = x.floor; budget -= x.floor; });
+    free = free.filter(x => x.floor <= cap);
+    if (free.length === 0) break;
+  }
+  return out;
+}
+
+// Take the same cut off every day's planned amount; a day that would drop
+// below its floor stops there and the rest of the cut moves to the others.
+function spreadEvenCut(days, need) {
+  const out = {};
+  let free = days.slice(), left = need;
+  for (;;) {
+    const cut = left / free.length;
+    const pinned = free.filter(x => x.planned - cut < x.floor);
+    if (pinned.length === 0) { free.forEach(x => out[x.d] = Math.floor(x.planned - cut)); break; }
+    pinned.forEach(x => { out[x.d] = x.floor; left -= (x.planned - x.floor); });
+    free = free.filter(x => x.planned - cut >= x.floor);
+    if (free.length === 0) break;
+  }
+  return out;
+}
+
+function checkWeeklyGoal() {
+  const s = store.settings;
+  const goal = s.weeklyGoal;
+  if (!(goal > 0)) return { head: 'No goal set', cls: 'behind',
+    html: 'Set a weekly loss goal in Settings → // weeks first.' };
+
+  const cur = buildWeeklyRows().find(r => r.inProgress);
+  if (!cur) return { head: 'No week in progress', cls: 'behind',
+    html: 'Today isn’t inside the range set in Settings.' };
+  if (cur.change === null) return { head: 'No starting weight', cls: 'behind',
+    html: 'Log a weigh-in on or before ' + dayTag(cur.prevAnchor) + ' to check this week.' };
+
+  const today = todayStr();
+  const model = buildDayModel();
+  const proj = cur.change;
+  const short = goal - proj;   // lbs still missing
+  const sub = 'Goal ' + goal.toFixed(1) + ' lbs · projected ' + proj.toFixed(2) + ' lbs';
+
+  if (short <= 0) {
+    let html = 'Sticking to your targets for the rest of the week gets you there.';
+    if (s.goalShowSpare !== false) {
+      html += '<div class="goal-opt"><b>Spare</b>About ' + fmtCal(-short * 3500)
+        + ' cal to spare this week.</div>';
+    }
+    return { head: 'On track', cls: 'ok', sub, html };
+  }
+
+  // Days that can still change, each with its planned amount and a floor.
+  const adj = dateRange(cur.prevAnchor, addDays(cur.anchor, -1))
+    .filter(d => d > today || (d === today && !weekTodayActual))
+    .map(d => {
+      const rec = model[d];
+      const planned = weekIntakeForDay(d, rec, today, getTDEE());
+      const logged = (d === today && rec && rec.logged) ? rec.eaten : 0;
+      return { d, planned, floor: logged };
+    });
+
+  const need = short * 3500;
+  const room = adj.reduce((a, x) => a + (x.planned - x.floor), 0);
+  const todayNote = weekTodayActual ? ' (today counted as logged)' : '';
+
+  if (adj.length === 0 || need > room) {
+    const best = proj + room / 3500;
+    return { head: 'Can’t catch up', cls: 'no', sub,
+      html: 'Can’t reach ' + goal.toFixed(1) + ' lbs this week' + todayNote + '. Even eating nothing from here on, you’d lose '
+        + best.toFixed(2) + ' lbs, ' + (goal - best).toFixed(2) + ' short.' };
+  }
+
+  let html = 'About ' + fmtCal(need) + ' cal to cut to hit ' + goal.toFixed(1) + ' lbs.';
+
+  // Option 1: all of it today.
+  const t = adj.find(x => x.d === today);
+  if (t && t.planned - need >= t.floor) {
+    const max = Math.floor(t.planned - need);
+    let line = 'Eat max ' + fmtCal(max) + ' cal today.';
+    if (t.floor > 0) line += ' <span class="goal-dim">(' + fmtCal(t.floor) + ' logged, ' + fmtCal(max - t.floor) + ' left)</span>';
+    html += '<div class="goal-opt"><b>Today only</b>' + line + '</div>';
+  }
+
+  // Option 2: spread over every day that can change.
+  if (adj.length > 1) {
+    const plan = s.goalSpreadCut
+      ? spreadEvenCut(adj, need)
+      : spreadEvenCap(adj, adj.reduce((a, x) => a + x.planned, 0) - need);
+    const vals = adj.map(x => plan[x.d]);
+    let line;
+    if (!s.goalSpreadCut && vals.every(v => v === vals[0])) {
+      line = 'Eat max ' + fmtCal(vals[0]) + ' cal/day for the remaining ' + adj.length + ' days ('
+        + dayTag(adj[0].d) + ' – ' + dayTag(adj[adj.length - 1].d) + ').';
+    } else {
+      line = adj.map(x => dayTag(x.d) + ': max ' + fmtCal(plan[x.d])
+        + (x.floor > 0 && plan[x.d] === x.floor ? ' (already logged)' : '')).join('<br>');
+    }
+    html += '<div class="goal-opt"><b>Spread out</b>' + line + '</div>';
+  }
+
+  return { head: 'Behind by ' + short.toFixed(2) + ' lbs', cls: 'behind', sub, html };
+}
+
+document.getElementById('check-goal-btn').addEventListener('click', () => {
+  const r = checkWeeklyGoal();
+  document.getElementById('goal-modal-sub').textContent = r.sub || '';
+  document.getElementById('goal-modal-body').innerHTML =
+    '<div class="goal-head ' + r.cls + '">' + r.head + '</div>' + r.html;
+  document.getElementById('goal-modal').classList.add('show');
+});
+document.getElementById('goal-modal-ok').addEventListener('click', () =>
+  document.getElementById('goal-modal').classList.remove('show'));
+document.getElementById('goal-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('goal-modal')) e.target.classList.remove('show');
+});
+
 // ============================================================
 // SETTINGS
 // ============================================================
@@ -1687,7 +1939,7 @@ document.getElementById('toggle-week-today').addEventListener('change', (e) => {
 let suppressAutosave = false;
 
 // Week pickers: native wheel on iOS, dropdown elsewhere. No typing.
-['set-cal-weeks', 'set-graph-weeks'].forEach(id => {
+['set-cal-weeks'].forEach(id => {
   const sel = document.getElementById(id);
   for (let w = 1; w <= 104; w++) {
     const o = document.createElement('option');
@@ -1732,24 +1984,20 @@ function ensureCalOption(sel, val) {
   after ? sel.insertBefore(o, after) : sel.appendChild(o);
 }
 
-function applyGraphLink() {
-  const linked = document.getElementById('set-link-graph').checked;
-  const gs = document.getElementById('set-graph-start');
-  const gw = document.getElementById('set-graph-weeks');
-  if (linked) {
-    gs.value = document.getElementById('set-cal-start').value;
-    gw.value = document.getElementById('set-cal-weeks').value;
-  }
-  gs.disabled = linked;
-  gw.disabled = linked;
+// The text beside each two-way switch says which side is active.
+function updateSwitchNotes() {
+  document.getElementById('set-four-week-note').textContent =
+    document.getElementById('set-four-week').checked
+      ? 'On: 4-week total, in fixed blocks from the range start, shown on each 4th week.'
+      : 'Off: month total, weight on the 1st vs the 1st of the next month.';
+  document.getElementById('set-goal-cut-note').textContent =
+    document.getElementById('set-goal-cut').checked
+      ? 'On: same cut taken off each remaining day’s target.'
+      : 'Off: same max calories every remaining day.';
 }
 
-['set-link-graph', 'set-cal-start', 'set-cal-weeks'].forEach(id => {
-  document.getElementById(id).addEventListener('change', () => {
-    applyGraphLink();      // mirror graph fields first, then commit
-    saveSettingsNow();
-  });
-});
+['set-four-week', 'set-goal-cut'].forEach(id =>
+  document.getElementById(id).addEventListener('change', updateSwitchNotes));
 
 function loadSettings() {
   suppressAutosave = true;
@@ -1764,10 +2012,12 @@ function loadSettings() {
   document.getElementById('set-week-start').value = weekStartDay();
   document.getElementById('set-cal-start').value = calStart();
   document.getElementById('set-cal-weeks').value = calWeeks();
-  document.getElementById('set-link-graph').checked = !!s.linkGraph;
-  document.getElementById('set-graph-start').value = graphStart();
-  document.getElementById('set-graph-weeks').value = graphWeeks();
-  applyGraphLink();
+  document.getElementById('set-show-calday').checked = s.showCalDay !== false;
+  document.getElementById('set-four-week').checked = s.fourWeekTotal === true;
+  document.getElementById('set-weekly-goal').value = (s.weeklyGoal > 0) ? s.weeklyGoal : '';
+  document.getElementById('set-goal-spare').checked = s.goalShowSpare !== false;
+  document.getElementById('set-goal-cut').checked = s.goalSpreadCut === true;
+  updateSwitchNotes();
   updateWeeklyProjection();
   suppressAutosave = false;
 }
@@ -1790,19 +2040,18 @@ function saveSettingsNow() {
   store.settings.weekStart = (wsVal >= 0 && wsVal <= 6) ? wsVal : 1;
   store.settings.calStart = document.getElementById('set-cal-start').value || addDays(todayStr(), -28);
   store.settings.calWeeks = clampWeeks(document.getElementById('set-cal-weeks').value, 26);
-  store.settings.linkGraph = document.getElementById('set-link-graph').checked;
-  if (store.settings.linkGraph) {
-    store.settings.graphStart = store.settings.calStart;
-    store.settings.graphWeeks = store.settings.calWeeks;
-  } else {
-    store.settings.graphStart = document.getElementById('set-graph-start').value || addDays(todayStr(), -28);
-    store.settings.graphWeeks = clampWeeks(document.getElementById('set-graph-weeks').value, 12);
-  }
+  store.settings.showCalDay = document.getElementById('set-show-calday').checked;
+  store.settings.fourWeekTotal = document.getElementById('set-four-week').checked;
+  const goal = parseFloat(document.getElementById('set-weekly-goal').value);
+  store.settings.weeklyGoal = (goal > 0) ? goal : null;
+  store.settings.goalShowSpare = document.getElementById('set-goal-spare').checked;
+  store.settings.goalSpreadCut = document.getElementById('set-goal-cut').checked;
   saveStore(store); showToast('Saved');
   updateWeeklyProjection(); renderDay();
 }
 
-['set-tdee', 'set-target-weekday', 'set-target-weekend', 'set-graph-start', 'set-graph-weeks', 'set-week-start']
+['set-tdee', 'set-target-weekday', 'set-target-weekend', 'set-week-start', 'set-cal-start', 'set-cal-weeks',
+ 'set-show-calday', 'set-four-week', 'set-weekly-goal', 'set-goal-spare', 'set-goal-cut']
   .forEach(id => document.getElementById(id).addEventListener('change', saveSettingsNow));
 
 function updateWeeklyProjection() {
