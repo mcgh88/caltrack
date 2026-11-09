@@ -25,6 +25,8 @@
      2026-11-08  Weekly loss goal + Check goal popup (on track /
                  catch up today or spread / can't catch up).
      2026-11-08  sw.js: dropped missing icon-512 from precache.
+     2026-11-09  Week tab: Week and total values shown blue when a
+                 used weigh-in falls inside the period; key below table.
      =========================================================== -->
 <html lang="en">
 <head>
@@ -49,6 +51,7 @@
   --green-dim: #2d8a6e;
   --yellow: #f0c040;
   --purple: #9b59b6;
+  --blue: #5b9bd5;
   --text: #eaeaea;
   --text-dim: #8892a4;
   --text-faint: #555e70;
@@ -319,6 +322,8 @@ input[type="date"] { -webkit-appearance: none; }
   line-height: 1.6; margin-top: 12px;
 }
 .wk-note .wk-star { color: var(--yellow); }
+/* Value moved by a scale weigh-in used in calculations. */
+.wk-table .wk-scale, .wk-note .wk-scale { color: var(--blue); }
 .wk-note b { color: var(--text-dim); font-weight: 600; }
 
 .set-note { font-size:11px; color:var(--text-faint); margin-top:-2px; margin-bottom:10px; font-family:var(--mono); line-height:1.5; }
@@ -1608,6 +1613,20 @@ function fmtLoss(v) {
   return '<span class="' + cls + '">' + txt + '</span>';
 }
 
+// True when a weigh-in used in calculations lands after the period's first
+// morning and up to its closing morning. Only those change a period's loss;
+// one on the first morning just shifts the whole line, leaving the loss as is.
+function scaleInside(open, close) {
+  for (let d = addDays(open, 1); d <= close; d = addDays(d, 1)) {
+    if (usedWeight(store.days[d]) !== null) return true;
+  }
+  return false;
+}
+// Wraps a fmtLoss cell in the blue scale colour when it applies.
+function markScale(html, open, close) {
+  return scaleInside(open, close) ? '<span class="wk-scale">' + html.replace(/class="wk-(loss|gain)"/, 'class="wk-scale"') + '</span>' : html;
+}
+
 // Past days inside the graph range that were never logged. These are counted
 // at TDEE everywhere in the app, so the table footnotes them by date.
 function unloggedInRange() {
@@ -1718,7 +1737,7 @@ function renderWeekly() {
       return { cell: '<span class="wk-nil" title="No weigh-in on or before ' + shortDate(open) + '">—</span>' };
     }
     const gaps = new Set([...gapsBehind(open), ...gapsBehind(close)]).size;
-    let cell = fmtLoss(wOpen - wClose);
+    let cell = markScale(fmtLoss(wOpen - wClose), open, close);
     if (gaps > 0) {
       cell += '<span class="wk-star" title="' + tag + ': ' + gaps
         + ' unlogged day' + (gaps === 1 ? '' : 's')
@@ -1745,7 +1764,7 @@ function renderWeekly() {
 
     return '<tr' + cls + '>'
       + '<td>' + label + '</td>'
-      + '<td>' + fmtLoss(r.change) + '</td>'
+      + '<td>' + (r.change === null ? fmtLoss(null) : markScale(fmtLoss(r.change), r.prevAnchor, r.anchor)) + '</td>'
       + '<td>' + totCell + '</td>'
       + (showCalDay ? '<td class="wk-cal">' + perDay.toLocaleString() + '</td>' : '')
       + '</tr>';
@@ -1776,6 +1795,8 @@ function renderWeekly() {
     notes += '<div class="wk-note"><b>' + unlogged.length + ' unlogged @ TDEE '
       + getTDEE().toLocaleString() + ':</b> ' + shown + more + '</div>';
   }
+  const anyScale = rows.some(r => r.change !== null && scaleInside(r.prevAnchor, r.anchor));
+  if (anyScale) notes += '<div class="wk-note"><span class="wk-scale">Blue</span> = includes a scale weigh-in used in calculations.</div>';
   noteEl.innerHTML = notes;
 }
 
