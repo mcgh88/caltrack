@@ -27,6 +27,14 @@
      2026-11-08  sw.js: dropped missing icon-512 from precache.
      2026-11-09  Week tab: Week and total values shown blue when a
                  used weigh-in falls inside the period; key below table.
+     2026-11-11  Graph: weight line solid green; day circles thinned
+                 to scale with span like the labels; new Trend switch
+                 (blue linear fit); projection now purple.
+     2026-11-11  Settings // graph: switch to hide the calorie chart.
+     2026-11-11  Check goal: only "About x cal to cut"; Today only,
+                 Spread out, Spare and their two switches removed.
+                 Every result shows how today was counted; Behind
+                 says how many days the cut is over.
      =========================================================== -->
 <html lang="en">
 <head>
@@ -277,8 +285,13 @@ input[type="date"] { -webkit-appearance: none; }
 .panel::-webkit-scrollbar-thumb { background: var(--text-faint); border-radius: 2px; }
 .no-data { text-align: center; padding: 40px 20px; color: var(--text-dim); font-size: 14px; }
 
-/* Projection toggle on graph */
+/* Projection / Trend toggles on graph */
 .proj-toggle { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.proj-toggle + .proj-toggle { margin-left: 12px; }
+.switch.sw-purple input:checked + .track { background: rgba(176,108,232,0.25); }
+.switch.sw-purple input:checked + .track::after { background: #b06ce8; }
+.switch.sw-blue input:checked + .track { background: rgba(59,111,216,0.3); }
+.switch.sw-blue input:checked + .track::after { background: #3b6fd8; }
 .proj-toggle span.lbl { font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
 
 /* --- WEEKLY PANEL --- */
@@ -484,21 +497,28 @@ input[type="date"] { -webkit-appearance: none; }
   <div class="graph-controls">
     <span style="font-family:var(--mono);font-size:12px;color:var(--text-dim);" id="graph-range-label"></span>
     <label class="proj-toggle">
+      <span class="lbl">Trend</span>
+      <span class="switch sw-blue"><input type="checkbox" id="toggle-trend"><span class="track"></span></span>
+    </label>
+    <label class="proj-toggle">
       <span class="lbl">Projection</span>
-      <span class="switch"><input type="checkbox" id="toggle-projection"><span class="track"></span></span>
+      <span class="switch sw-purple"><input type="checkbox" id="toggle-projection"><span class="track"></span></span>
     </label>
   </div>
   <div class="legend">
     <div class="legend-item"><div class="legend-dot" style="background:#5b9bd5"></div> Weigh-in</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Calculated</div>
-    <div class="legend-item" id="legend-projected"><div class="legend-dot" style="background:var(--green)"></div> Projected</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Calculated</div>
+    <div class="legend-item" id="legend-trend"><div class="legend-dot" style="background:#3b6fd8"></div> Trend</div>
+    <div class="legend-item" id="legend-projected"><div class="legend-dot" style="background:#b06ce8"></div> Projected</div>
   </div>
   <div class="canvas-wrap"><canvas id="weight-chart" height="250"></canvas></div>
+  <div id="calorie-chart-wrap">
   <div class="canvas-wrap"><canvas id="calorie-chart" height="200"></canvas></div>
   <div class="legend">
     <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Calories</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div> Target</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div> Unlogged</div>
+  </div>
   </div>
 </div>
 
@@ -574,15 +594,13 @@ input[type="date"] { -webkit-appearance: none; }
       <input type="number" id="set-weekly-goal" placeholder="none" step="0.1" inputmode="decimal">
     </div>
     <div class="set-note">Used by Check goal on the Week tab. Today counts as logged or at target, following the &quot;Count today as logged&quot; toggle there.</div>
+  </div>
+  <div class="setting-group">
+    <h3>// graph</h3>
     <div class="setting-row">
-      <label>Show spare calories when ahead</label>
-      <span class="switch"><input type="checkbox" id="set-goal-spare"><span class="track"></span></span>
+      <label>Calorie chart</label>
+      <span class="switch"><input type="checkbox" id="set-show-calchart"><span class="track"></span></span>
     </div>
-    <div class="setting-row">
-      <label>Catch-up spread</label>
-      <span class="switch"><input type="checkbox" id="set-goal-cut"><span class="track"></span></span>
-    </div>
-    <div class="set-note" id="set-goal-cut-note"></div>
   </div>
   <div class="setting-group">
     <h3>// range</h3>
@@ -675,8 +693,8 @@ function getStore() {
 
 function defaultStore() {
   return {
-    settings: { tdee: 2650, targetWeekday: 1250, targetWeekend: 1750, calStart: addDays(todayStr(), -28), calWeeks: 26, showProjection: true, weekTodayActual: false, weekStart: 1,
-                showCalDay: true, fourWeekTotal: false, weeklyGoal: null, goalShowSpare: true, goalSpreadCut: false },
+    settings: { tdee: 2650, targetWeekday: 1250, targetWeekend: 1750, calStart: addDays(todayStr(), -28), calWeeks: 26, showProjection: true, showTrend: true, showCalChart: true, weekTodayActual: false, weekStart: 1,
+                showCalDay: true, fourWeekTotal: false, weeklyGoal: null },
     days: {}
   };
 }
@@ -781,6 +799,7 @@ function graphWeeks() { return calWeeks(); }
 function graphEnd() { return calEnd(); }
 
 function showProjection() { return store.settings.showProjection !== false; }
+function showTrend() { return store.settings.showTrend !== false; }
 
 function calStart() { return store.settings.calStart || addDays(todayStr(), -28); }
 function calWeeks() { return store.settings.calWeeks || 26; }
@@ -1304,6 +1323,10 @@ document.getElementById('toggle-projection').addEventListener('change', (e) => {
   store.settings.showProjection = e.target.checked;
   saveStore(store); renderGraphs();
 });
+document.getElementById('toggle-trend').addEventListener('change', (e) => {
+  store.settings.showTrend = e.target.checked;
+  saveStore(store); renderGraphs();
+});
 
 function renderGraphs() {
   const start = graphStart(), end = graphEnd();
@@ -1311,11 +1334,16 @@ function renderGraphs() {
     formatDate(start) + ' \u2192 ' + formatDate(end) + ' (' + graphWeeks() + ' weeks)';
   document.getElementById('toggle-projection').checked = showProjection();
   document.getElementById('legend-projected').style.display = showProjection() ? '' : 'none';
+  document.getElementById('toggle-trend').checked = showTrend();
+  document.getElementById('legend-trend').style.display = showTrend() ? '' : 'none';
   // Built once per render and shared by both charts.
   const model = buildDayModel();
   const dates = dateRange(start, end);
   drawWeightChart(model, dates);
-  drawCalorieChart(model, dates);
+  // Calorie chart can be hidden from Settings // graph.
+  const showCal = store.settings.showCalChart !== false;
+  document.getElementById('calorie-chart-wrap').style.display = showCal ? '' : 'none';
+  if (showCal) drawCalorieChart(model, dates);
 }
 
 function drawWeightChart(model, dates) {
@@ -1374,15 +1402,34 @@ function drawWeightChart(model, dates) {
   // Drawn only when the Projection toggle is on. The axis and range are
   // unaffected either way — they always follow the Settings window.
   if (showProjection() && futureWeights.length > 0) {
-    ctx.strokeStyle = '#4ecca3'; ctx.lineWidth = 2; ctx.setLineDash([6, 3]);
+    ctx.strokeStyle = '#b06ce8'; ctx.lineWidth = 2; ctx.setLineDash([6, 3]);
     ctx.beginPath();
     if (pastWeights.length > 0) { const lp = pastWeights[pastWeights.length - 1]; ctx.moveTo(xScale(lp.idx), yScale(lp.w)); }
     futureWeights.forEach(p => ctx.lineTo(xScale(p.idx), yScale(p.w)));
     ctx.stroke(); ctx.setLineDash([]);
   }
 
+  // Linear trend: least-squares fit through the past points, drawn from the
+  // first past point to the end of the range. Toggled by the Trend switch.
+  if (showTrend() && pastWeights.length >= 2) {
+    const n = pastWeights.length;
+    let sx = 0, sy = 0, sxx = 0, sxy = 0;
+    pastWeights.forEach(p => { sx += p.idx; sy += p.w; sxx += p.idx * p.idx; sxy += p.idx * p.w; });
+    const den = n * sxx - sx * sx;
+    if (den !== 0) {
+      const m = (n * sxy - sx * sy) / den, b = (sy - m * sx) / n;
+      const i0 = pastWeights[0].idx, i1 = dates.length - 1;
+      ctx.save();
+      ctx.beginPath(); ctx.rect(pad.l, pad.t, gW, gH); ctx.clip();
+      ctx.strokeStyle = '#3b6fd8'; ctx.lineWidth = 1.5; ctx.setLineDash([2, 4]);
+      ctx.beginPath(); ctx.moveTo(xScale(i0), yScale(m * i0 + b)); ctx.lineTo(xScale(i1), yScale(m * i1 + b));
+      ctx.stroke(); ctx.setLineDash([]);
+      ctx.restore();
+    }
+  }
+
   if (pastWeights.length > 0) {
-    ctx.strokeStyle = '#e94560'; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.strokeStyle = '#4ecca3'; ctx.lineWidth = 2; ctx.beginPath();
     pastWeights.forEach((p, i) => { const x = xScale(p.idx), y = yScale(p.w); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
     ctx.stroke();
     // Labelled squares go on every Nth week anchor so roughly six show
@@ -1391,6 +1438,11 @@ function drawWeightChart(model, dates) {
     const labelStep = Math.max(1, Math.round(graphWeeks() / 6));
     const anchors = pastWeights.filter(p => daysIntoWeek(p.date) === 0).map(p => p.date);
     const labelled = new Set(anchors.filter((d, i) => (anchors.length - 1 - i) % labelStep === 0));
+    // Plain circles are thinned the same way: one every circleStep points
+    // (keeping them ~10px apart at any span), counted back from the latest.
+    const pxPerDay = gW / (dates.length - 1);
+    const circleStep = Math.max(1, Math.ceil(10 / pxPerDay));
+    const lastIdx = pastWeights[pastWeights.length - 1].idx;
     pastWeights.forEach(p => {
       const x = xScale(p.idx), y = yScale(p.w);
       if (labelled.has(p.date)) {
@@ -1400,9 +1452,9 @@ function drawWeightChart(model, dates) {
         ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 1; ctx.strokeRect(x - sz, y - sz, sz * 2, sz * 2);
         ctx.fillStyle = dotColor; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'left';
         ctx.fillText(p.w.toFixed(1), x + 8, y - 10 < pad.t + 10 ? y + 16 : y - 10);
-      } else {
+      } else if ((lastIdx - p.idx) % circleStep === 0) {
         ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2);
-        ctx.fillStyle = p.isActual ? '#5b9bd5' : '#e94560'; ctx.fill();
+        ctx.fillStyle = p.isActual ? '#5b9bd5' : '#4ecca3'; ctx.fill();
         ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 1.5; ctx.stroke();
       }
     });
@@ -1828,38 +1880,6 @@ const SHORT_DAY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const dayTag = (d) => SHORT_DAY[parseDate(d).getDay()] + ' ' + shortDate(d);
 const fmtCal = (n) => Math.round(n).toLocaleString();
 
-// Share `allowed` calories across days so each gets the same amount, never
-// below its floor. Days whose floor is above the even share are pinned there.
-function spreadEvenCap(days, allowed) {
-  const out = {};
-  let free = days.slice(), budget = allowed;
-  for (;;) {
-    const cap = budget / free.length;
-    const pinned = free.filter(x => x.floor > cap);
-    if (pinned.length === 0) { free.forEach(x => out[x.d] = Math.floor(cap)); break; }
-    pinned.forEach(x => { out[x.d] = x.floor; budget -= x.floor; });
-    free = free.filter(x => x.floor <= cap);
-    if (free.length === 0) break;
-  }
-  return out;
-}
-
-// Take the same cut off every day's planned amount; a day that would drop
-// below its floor stops there and the rest of the cut moves to the others.
-function spreadEvenCut(days, need) {
-  const out = {};
-  let free = days.slice(), left = need;
-  for (;;) {
-    const cut = left / free.length;
-    const pinned = free.filter(x => x.planned - cut < x.floor);
-    if (pinned.length === 0) { free.forEach(x => out[x.d] = Math.floor(x.planned - cut)); break; }
-    pinned.forEach(x => { out[x.d] = x.floor; left -= (x.planned - x.floor); });
-    free = free.filter(x => x.planned - cut >= x.floor);
-    if (free.length === 0) break;
-  }
-  return out;
-}
-
 function checkWeeklyGoal() {
   const s = store.settings;
   const goal = s.weeklyGoal;
@@ -1878,12 +1898,14 @@ function checkWeeklyGoal() {
   const short = goal - proj;   // lbs still missing
   const sub = 'Goal ' + goal.toFixed(1) + ' lbs · projected ' + proj.toFixed(2) + ' lbs';
 
+  // Shown on every result so it's clear how today went into the numbers.
+  const tRec = model[today];
+  const todayLine = '<div class="goal-opt"><b>Today</b>' + (weekTodayActual
+    ? 'As logged (' + fmtCal((tRec && tRec.logged) ? tRec.eaten : 0) + ')'
+    : 'At target (' + fmtCal(tRec ? tRec.target : getTargetForDate(today)) + ')') + '</div>';
+
   if (short <= 0) {
-    let html = 'Sticking to your targets for the rest of the week gets you there.';
-    if (s.goalShowSpare !== false) {
-      html += '<div class="goal-opt"><b>Spare</b>About ' + fmtCal(-short * 3500)
-        + ' cal to spare this week.</div>';
-    }
+    const html = 'Sticking to your targets for the rest of the week gets you there.' + todayLine;
     return { head: 'On track', cls: 'ok', sub, html };
   }
 
@@ -1899,42 +1921,19 @@ function checkWeeklyGoal() {
 
   const need = short * 3500;
   const room = adj.reduce((a, x) => a + (x.planned - x.floor), 0);
-  const todayNote = weekTodayActual ? ' (today counted as logged)' : '';
-
   if (adj.length === 0 || need > room) {
-    const best = proj + room / 3500;
     return { head: 'Can’t catch up', cls: 'no', sub,
-      html: 'Can’t reach ' + goal.toFixed(1) + ' lbs this week' + todayNote + '. Even eating nothing from here on, you’d lose '
-        + best.toFixed(2) + ' lbs, ' + (goal - best).toFixed(2) + ' short.' };
+      html: 'You can’t reach ' + goal.toFixed(1) + ' lbs this week. Currently on pace for '
+        + proj.toFixed(2) + ' lbs.' + todayLine };
   }
 
-  let html = 'About ' + fmtCal(need) + ' cal to cut to hit ' + goal.toFixed(1) + ' lbs.';
-
-  // Option 1: all of it today.
-  const t = adj.find(x => x.d === today);
-  if (t && t.planned - need >= t.floor) {
-    const max = Math.floor(t.planned - need);
-    let line = 'Eat max ' + fmtCal(max) + ' cal today.';
-    if (t.floor > 0) line += ' <span class="goal-dim">(' + fmtCal(t.floor) + ' logged, ' + fmtCal(max - t.floor) + ' left)</span>';
-    html += '<div class="goal-opt"><b>Today only</b>' + line + '</div>';
-  }
-
-  // Option 2: spread over every day that can change.
-  if (adj.length > 1) {
-    const plan = s.goalSpreadCut
-      ? spreadEvenCut(adj, need)
-      : spreadEvenCap(adj, adj.reduce((a, x) => a + x.planned, 0) - need);
-    const vals = adj.map(x => plan[x.d]);
-    let line;
-    if (!s.goalSpreadCut && vals.every(v => v === vals[0])) {
-      line = 'Eat max ' + fmtCal(vals[0]) + ' cal/day for the remaining ' + adj.length + ' days ('
-        + dayTag(adj[0].d) + ' – ' + dayTag(adj[adj.length - 1].d) + ').';
-    } else {
-      line = adj.map(x => dayTag(x.d) + ': max ' + fmtCal(plan[x.d])
-        + (x.floor > 0 && plan[x.d] === x.floor ? ' (already logged)' : '')).join('<br>');
-    }
-    html += '<div class="goal-opt"><b>Spread out</b>' + line + '</div>';
-  }
+  const shortDay = (d) => SHORT_DAY[parseDate(d).getDay()];
+  const n = adj.length;
+  const over = n === 1
+    ? (adj[0].d === today ? 'today' : 'on ' + shortDay(adj[0].d))
+    : 'over ' + n + ' days (' + (adj[0].d === today ? 'today' : shortDay(adj[0].d))
+      + '–' + shortDay(adj[n - 1].d) + ')';
+  const html = 'About ' + fmtCal(need) + ' cal to cut ' + over + ' to hit ' + goal.toFixed(1) + ' lbs.' + todayLine;
 
   return { head: 'Behind by ' + short.toFixed(2) + ' lbs', cls: 'behind', sub, html };
 }
@@ -2011,13 +2010,9 @@ function updateSwitchNotes() {
     document.getElementById('set-four-week').checked
       ? 'On: 4-week total, in fixed blocks from the range start, shown on each 4th week.'
       : 'Off: month total, weight on the 1st vs the 1st of the next month.';
-  document.getElementById('set-goal-cut-note').textContent =
-    document.getElementById('set-goal-cut').checked
-      ? 'On: same cut taken off each remaining day’s target.'
-      : 'Off: same max calories every remaining day.';
 }
 
-['set-four-week', 'set-goal-cut'].forEach(id =>
+['set-four-week'].forEach(id =>
   document.getElementById(id).addEventListener('change', updateSwitchNotes));
 
 function loadSettings() {
@@ -2034,10 +2029,9 @@ function loadSettings() {
   document.getElementById('set-cal-start').value = calStart();
   document.getElementById('set-cal-weeks').value = calWeeks();
   document.getElementById('set-show-calday').checked = s.showCalDay !== false;
+  document.getElementById('set-show-calchart').checked = s.showCalChart !== false;
   document.getElementById('set-four-week').checked = s.fourWeekTotal === true;
   document.getElementById('set-weekly-goal').value = (s.weeklyGoal > 0) ? s.weeklyGoal : '';
-  document.getElementById('set-goal-spare').checked = s.goalShowSpare !== false;
-  document.getElementById('set-goal-cut').checked = s.goalSpreadCut === true;
   updateSwitchNotes();
   updateWeeklyProjection();
   suppressAutosave = false;
@@ -2062,17 +2056,16 @@ function saveSettingsNow() {
   store.settings.calStart = document.getElementById('set-cal-start').value || addDays(todayStr(), -28);
   store.settings.calWeeks = clampWeeks(document.getElementById('set-cal-weeks').value, 26);
   store.settings.showCalDay = document.getElementById('set-show-calday').checked;
+  store.settings.showCalChart = document.getElementById('set-show-calchart').checked;
   store.settings.fourWeekTotal = document.getElementById('set-four-week').checked;
   const goal = parseFloat(document.getElementById('set-weekly-goal').value);
   store.settings.weeklyGoal = (goal > 0) ? goal : null;
-  store.settings.goalShowSpare = document.getElementById('set-goal-spare').checked;
-  store.settings.goalSpreadCut = document.getElementById('set-goal-cut').checked;
   saveStore(store); showToast('Saved');
   updateWeeklyProjection(); renderDay();
 }
 
 ['set-tdee', 'set-target-weekday', 'set-target-weekend', 'set-week-start', 'set-cal-start', 'set-cal-weeks',
- 'set-show-calday', 'set-four-week', 'set-weekly-goal', 'set-goal-spare', 'set-goal-cut']
+ 'set-show-calday', 'set-show-calchart', 'set-four-week', 'set-weekly-goal']
   .forEach(id => document.getElementById(id).addEventListener('change', saveSettingsNow));
 
 function updateWeeklyProjection() {
