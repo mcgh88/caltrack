@@ -1933,7 +1933,11 @@ function checkWeeklyGoal() {
     ? (adj[0].d === today ? 'today' : 'on ' + shortDay(adj[0].d))
     : 'over ' + n + ' days (' + (adj[0].d === today ? 'today' : shortDay(adj[0].d))
       + '–' + shortDay(adj[n - 1].d) + ')';
-  const html = 'About ' + fmtCal(need) + ' cal to cut ' + over + ' to hit ' + goal.toFixed(1) + ' lbs.' + todayLine;
+  const perDay = n > 1
+    ? ' (' + fmtCal(need / n) + ' cal reduction over each of the ' + n + ' days)'
+    : '';
+  const html = 'About ' + fmtCal(need) + ' cal to cut ' + over + ' to hit ' + goal.toFixed(1) + ' lbs'
+    + perDay + '.' + todayLine;
 
   return { head: 'Behind by ' + short.toFixed(2) + ' lbs', cls: 'behind', sub, html };
 }
