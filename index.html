@@ -48,6 +48,13 @@
                  open); Reset refills today = logged, rest = target,
                  without touching the save; Exit just closes. Past
                  days always come from what's logged.
+     2026-11-21  Scenario becomes its own Plan tab; Check goal and
+                 Scenario buttons removed from Week. Whole week
+                 listed, past days greyed at actuals. Goal picker
+                 0-4 by 0.25 (from Settings, local only). Hit goal:
+                 flat cut per day, rounded to 50, min 1000/day and
+                 never under today's logged; else "Not doable".
+                 Save / Reset. Nothing on Plan affects other views.
      =========================================================== -->
 <html lang="en">
 <head>
@@ -368,13 +375,17 @@ input[type="date"] { -webkit-appearance: none; }
 .wk-table th { top: calc(var(--wk-head, 0px) - 20px); }
 .wk-controls .btn { margin-left: auto; }
 .wk-controls .btn + .btn { margin-left: 0; }
-#scenario-modal .modal { max-height: 90vh; overflow-y: auto; }
 .scn-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .scn-row .scn-day { flex: 0 0 96px; padding: 10px 8px; font-size: 12px; }
 .scn-row select { flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--text-faint); border-radius: 8px;
   color: var(--text); font-family: var(--mono); font-size: 16px; padding: 9px 10px; text-align: right; outline: none; }
 .scn-row select:focus { border-color: var(--accent); }
 .scn-row select.scn-edited { border-color: var(--yellow); }
+.scn-row .scn-lbl { flex: 0 0 96px; font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
+.scn-past { opacity: 0.4; }
+.scn-past select, .scn-past .scn-day { pointer-events: none; }
+.plan-buttons { display: flex; gap: 8px; margin-top: 16px; }
+.plan-buttons .btn { flex: 1; }
 .scn-note { color: var(--text-dim); font-size: 11px; margin-top: 10px; }
 
 /* Goal popup */
@@ -476,6 +487,10 @@ input[type="date"] { -webkit-appearance: none; }
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
     Week
   </button>
+  <button class="tab-btn" data-tab="plan">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
+    Plan
+  </button>
   <button class="tab-btn" data-tab="settings">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     Settings
@@ -554,12 +569,21 @@ input[type="date"] { -webkit-appearance: none; }
         <span class="lbl">Count today as logged</span>
         <span class="switch"><input type="checkbox" id="toggle-week-today"><span class="track"></span></span>
       </label>
-      <button class="btn btn-sm btn-outline" id="check-goal-btn">Check goal</button>
-      <button class="btn btn-sm btn-outline" id="scenario-btn">Scenario</button>
     </div>
   </div>
   <div id="weekly-table"></div>
   <div id="weekly-notes"></div>
+</div>
+
+<!-- PLAN PANEL -->
+<div class="panel" id="panel-plan">
+  <div class="panel-header" style="margin-bottom:4px;">Plan</div>
+  <div class="modal-subtitle" id="plan-sub"></div>
+  <div class="goal-body" id="plan-body"></div>
+  <div class="plan-buttons" id="plan-buttons">
+    <button class="btn btn-green" id="plan-save">Save</button>
+    <button class="btn btn-outline" id="plan-reset">Reset</button>
+  </div>
 </div>
 
 <!-- CALENDAR PANEL -->
@@ -675,32 +699,6 @@ input[type="date"] { -webkit-appearance: none; }
       <button class="btn btn-outline" id="weight-modal-cancel">Cancel</button>
       <button class="btn btn-danger btn-sm" id="weight-modal-clear" style="display:none;">Clear</button>
       <button class="btn btn-green" id="weight-modal-save">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- GOAL MODAL -->
-<div class="modal-overlay" id="goal-modal">
-  <div class="modal">
-    <div class="modal-title">Weekly Goal</div>
-    <div class="modal-subtitle" id="goal-modal-sub"></div>
-    <div class="goal-body" id="goal-modal-body"></div>
-    <div class="modal-buttons">
-      <button class="btn btn-green" id="goal-modal-ok">OK</button>
-    </div>
-  </div>
-</div>
-
-<!-- SCENARIO MODAL -->
-<div class="modal-overlay" id="scenario-modal">
-  <div class="modal">
-    <div class="modal-title">Scenario</div>
-    <div class="modal-subtitle" id="scenario-modal-sub"></div>
-    <div class="goal-body" id="scenario-modal-body"></div>
-    <div class="modal-buttons">
-      <button class="btn btn-green" id="scenario-modal-save">Save</button>
-      <button class="btn btn-outline" id="scenario-modal-reset">Reset</button>
-      <button class="btn btn-outline" id="scenario-modal-ok">Exit</button>
     </div>
   </div>
 </div>
@@ -956,7 +954,7 @@ let currentDate = todayStr();
 // ============================================================
 // TAB NAVIGATION
 // ============================================================
-const tabOrder = ['day', 'calendar', 'graph', 'weekly', 'settings'];
+const tabOrder = ['day', 'calendar', 'graph', 'weekly', 'plan', 'settings'];
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -981,6 +979,7 @@ function switchToTab(tab) {
     wp.scrollTop = wp.scrollHeight;
   }
   if (tab === 'calendar') { renderCalendar(); scrollCalendarToToday(); }
+  if (tab === 'plan') renderPlan(false);
   if (tab === 'settings') loadSettings();
   if (tab === 'day') renderDay();
 }
@@ -1905,149 +1904,99 @@ function setWeeklyHeadOffset() {
 window.addEventListener('resize', setWeeklyHeadOffset);
 
 // ============================================================
-// WEEKLY GOAL CHECK
+// PLAN TAB
 //
-// Projects this week the same way the in-progress row does (past days as
-// logged or TDEE, today per the Count-today toggle, later days at target),
-// compares the loss to the manual goal, and if short works out how to close
-// the gap. Days that can still change: every day after today, plus today
-// when it isn't counted as logged. Today can't go below what's already logged.
+// A sandbox for the current week. Nothing here feeds back into any other
+// view or setting; the only thing it writes is its own saved snapshot.
+//
+// Every day of the week is listed. Days before today are greyed out and
+// show what counts for them (logged, or TDEE when unlogged). Today starts
+// at what's logged (target if nothing yet), later days at target; tapping a
+// day puts it back to target. An actual weigh-in inside the week resets
+// the chain, the same as projectedWeekEndWeight().
+//
+// Hit goal takes a flat amount off each adjustable day, rounded up to 50.
+// A day never goes below PLAN_MIN_DAY, and today never goes below what's
+// already logged; anything a day can't absorb is spread over the rest.
 // ============================================================
 const SHORT_DAY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const dayTag = (d) => SHORT_DAY[parseDate(d).getDay()] + ' ' + shortDate(d);
 const fmtCal = (n) => Math.round(n).toLocaleString();
+const PLAN_MIN_DAY = 1000;
 
-function checkWeeklyGoal() {
-  const s = store.settings;
-  const goal = s.weeklyGoal;
-  if (!(goal > 0)) return { head: 'No goal set', cls: 'behind',
-    html: 'Set a weekly loss goal in Settings → // weeks first.' };
+let plan = null;   // { cur, model, goal, days: [{ d, past, target, floor, cal }] }
 
-  const cur = buildWeeklyRows().find(r => r.inProgress);
-  if (!cur) return { head: 'No week in progress', cls: 'behind',
-    html: 'Today isn’t inside the range set in Settings.' };
-  if (cur.change === null) return { head: 'No starting weight', cls: 'behind',
-    html: 'Log a weigh-in on or before ' + dayTag(cur.prevAnchor) + ' to check this week.' };
-
-  const today = todayStr();
-  const model = buildDayModel();
-  const proj = cur.change;
-  const short = goal - proj;   // lbs still missing
-  const sub = 'Goal ' + goal.toFixed(1) + ' lbs · projected ' + proj.toFixed(2) + ' lbs';
-
-  // Shown on every result so it's clear how today went into the numbers.
-  const tRec = model[today];
-  const todayLine = '<div class="goal-opt"><b>Today</b>' + (weekTodayActual
-    ? 'As logged (' + fmtCal((tRec && tRec.logged) ? tRec.eaten : 0) + ')'
-    : 'At target (' + fmtCal(tRec ? tRec.target : getTargetForDate(today)) + ')') + '</div>';
-
-  if (short <= 0) {
-    const html = 'Sticking to your targets for the rest of the week gets you there.' + todayLine;
-    return { head: 'On track', cls: 'ok', sub, html };
-  }
-
-  // Days that can still change, each with its planned amount and a floor.
-  const adj = dateRange(cur.prevAnchor, addDays(cur.anchor, -1))
-    .filter(d => d > today || (d === today && !weekTodayActual))
-    .map(d => {
-      const rec = model[d];
-      const planned = weekIntakeForDay(d, rec, today, getTDEE());
-      const logged = (d === today && rec && rec.logged) ? rec.eaten : 0;
-      return { d, planned, floor: logged };
-    });
-
-  const need = short * 3500;
-  const room = adj.reduce((a, x) => a + (x.planned - x.floor), 0);
-  if (adj.length === 0 || need > room) {
-    return { head: 'Can’t catch up', cls: 'no', sub,
-      html: 'You can’t reach ' + goal.toFixed(1) + ' lbs this week. Currently on pace for '
-        + proj.toFixed(2) + ' lbs.' + todayLine };
-  }
-
-  const shortDay = (d) => SHORT_DAY[parseDate(d).getDay()];
-  const n = adj.length;
-  const over = n === 1
-    ? (adj[0].d === today ? 'today' : 'on ' + shortDay(adj[0].d))
-    : 'over ' + n + ' days (' + (adj[0].d === today ? 'today' : shortDay(adj[0].d))
-      + '–' + shortDay(adj[n - 1].d) + ')';
-  const perDay = n > 1
-    ? ' (' + fmtCal(need / n) + ' cal reduction over each of the ' + n + ' days)'
-    : '';
-  const html = 'About ' + fmtCal(need) + ' cal to cut ' + over + ' to hit ' + goal.toFixed(1) + ' lbs'
-    + perDay + '.' + todayLine;
-
-  return { head: 'Behind by ' + short.toFixed(2) + ' lbs', cls: 'behind', sub, html };
-}
-
-document.getElementById('check-goal-btn').addEventListener('click', () => {
-  const r = checkWeeklyGoal();
-  document.getElementById('goal-modal-sub').textContent = r.sub || '';
-  document.getElementById('goal-modal-body').innerHTML =
-    '<div class="goal-head ' + r.cls + '">' + r.head + '</div>' + r.html;
-  document.getElementById('goal-modal').classList.add('show');
-});
-document.getElementById('goal-modal-ok').addEventListener('click', () =>
-  document.getElementById('goal-modal').classList.remove('show'));
-document.getElementById('goal-modal').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('goal-modal')) e.target.classList.remove('show');
-});
-
-// ============================================================
-// SCENARIO
-//
-// A what-if for the rest of the current week. One calorie field per day
-// from today to the week's last day: today starts at what's logged (target
-// if nothing is logged yet), later days at target. Tapping a day button
-// puts that day back to target. Days before today run the usual way
-// (logged, or TDEE when unlogged), and an actual weigh-in inside the week
-// resets the chain exactly as projectedWeekEndWeight() does. Nothing here
-// is saved; it ignores the Count-today toggle.
-// ============================================================
-let scenario = null;   // { cur, model, days: [{ d, target, cal }] }
-
-// A saved scenario lives in settings as { week: <week start>, cals: { date: cal },
-// savedOn }. It only applies to the week it was saved in, and only to days
-// that are still today or ahead; days that have since passed come from what
-// was actually logged, like everywhere else.
-function savedScenarioFor(cur) {
-  const sv = store.settings.scenario;
+// Saved as store.settings.plan = { week, goal, cals: { date: cal }, savedOn }.
+// Only applies to the week it was saved in.
+function savedPlanFor(cur) {
+  const sv = store.settings.plan;
   return (sv && sv.week === cur.prevAnchor && sv.cals) ? sv : null;
 }
 
-function openScenario(fresh) {
-  const sub = document.getElementById('scenario-modal-sub');
-  const body = document.getElementById('scenario-modal-body');
+function renderPlan(fresh) {
+  const sub = document.getElementById('plan-sub');
+  const body = document.getElementById('plan-body');
   const cur = buildWeeklyRows().find(r => r.inProgress);
-  scenario = null;
+  plan = null;
+  document.getElementById('plan-buttons').style.display = cur ? '' : 'none';
   if (!cur) {
     sub.textContent = '';
-    body.innerHTML = '<div class="goal-head behind">No week in progress</div>Today isn\u2019t inside the range set in Settings.';
-    document.getElementById('scenario-modal').classList.add('show');
+    body.innerHTML = '<div class="goal-opt"><b>No week in progress</b>Today isn’t inside the range set in Settings.</div>';
     return;
   }
   const today = todayStr();
+  const tdee = getTDEE();
   const model = buildDayModel();
-  const saved = fresh ? null : savedScenarioFor(cur);
-  const days = dateRange(today, addDays(cur.anchor, -1)).map(d => {
+  const saved = fresh ? null : savedPlanFor(cur);
+
+  const days = dateRange(cur.prevAnchor, addDays(cur.anchor, -1)).map(d => {
     const rec = model[d];
     const target = rec ? rec.target : getTargetForDate(d);
-    let cal = (d === today && rec && rec.logged) ? Math.round(rec.eaten) : target;
+    const logged = rec && rec.logged ? Math.round(rec.eaten) : null;
+    if (d < today) return { d, past: true, target, floor: 0, cal: logged !== null ? logged : tdee, unlogged: logged === null };
+    let cal = (d === today && logged !== null) ? logged : target;
     if (saved && saved.cals[d] !== undefined) cal = saved.cals[d];
-    return { d, target, cal };
+    const floor = Math.max(PLAN_MIN_DAY, d === today && logged !== null ? logged : 0);
+    return { d, past: false, target, floor, cal };
   });
-  scenario = { cur, model, days };
+  const settingsGoal = store.settings.weeklyGoal > 0 ? store.settings.weeklyGoal : 0;
+  const goal = (saved && typeof saved.goal === 'number') ? saved.goal : settingsGoal;
+  plan = { cur, model, goal, days };
 
   sub.textContent = 'Week ending ' + dayTag(addDays(cur.anchor, -1))
-    + (saved ? ' \u00b7 saved ' + dayTag(saved.savedOn) : '');
-  body.innerHTML = days.map((x, i) =>
-      '<div class="scn-row"><button class="btn btn-outline scn-day" data-i="' + i + '">'
-      + (x.d === today ? 'Today ' + SHORT_DAY[parseDate(x.d).getDay()] : dayTag(x.d)) + '</button>'
-      + '<select data-i="' + i + '"></select></div>'
-    ).join('')
-    + '<div id="scenario-result"></div>';
+    + (saved ? ' · saved ' + dayTag(saved.savedOn) : '');
 
-  // Pickers: 0\u20133500 by 50. A logged amount off that grid (or above it)
-  // is slotted in so today can still start at exactly what's logged.
+  body.innerHTML =
+      '<div class="scn-row"><span class="scn-lbl">Goal (lbs)</span><select id="plan-goal"></select></div>'
+    + days.map((x, i) =>
+        '<div class="scn-row' + (x.past ? ' scn-past' : '') + '">'
+        + '<button class="btn btn-outline scn-day" data-i="' + i + '"' + (x.past ? ' disabled' : '') + '>'
+        + (x.d === today ? 'Today ' + SHORT_DAY[parseDate(x.d).getDay()] : dayTag(x.d)) + '</button>'
+        + '<select data-i="' + i + '"' + (x.past ? ' disabled' : '') + '></select></div>'
+      ).join('')
+    + (days.some(x => x.unlogged) ? '<div class="scn-note">Unlogged past days count at TDEE.</div>' : '')
+    + '<button class="btn btn-outline" id="plan-hit" style="width:100%; margin-top:14px;">Hit goal</button>'
+    + '<div id="plan-hit-msg"></div>'
+    + '<div id="plan-result"></div>';
+
+  // Goal picker: 0–4 by 0.25; an off-grid Settings goal is slotted in.
+  const gSel = document.getElementById('plan-goal');
+  const gVals = [];
+  for (let g = 0; g <= 4.0001; g += 0.25) gVals.push(Math.round(g * 100) / 100);
+  if (!gVals.includes(goal)) { gVals.push(goal); gVals.sort((a, b) => a - b); }
+  gVals.forEach(g => {
+    const o = document.createElement('option');
+    o.value = g; o.textContent = g.toFixed(2);
+    gSel.appendChild(o);
+  });
+  gSel.value = goal;
+  gSel.addEventListener('change', () => {
+    plan.goal = parseFloat(gSel.value) || 0;
+    document.getElementById('plan-hit-msg').innerHTML = '';
+    renderPlanResult();
+  });
+
+  // Day pickers: 0–3500 by 50, with any off-grid value slotted in.
   body.querySelectorAll('select[data-i]').forEach(sel => {
     for (let c = 0; c <= 3500; c += 50) {
       const o = document.createElement('option');
@@ -2058,89 +2007,136 @@ function openScenario(fresh) {
     ensureCalOption(sel, x.target);
     ensureCalOption(sel, x.cal);
     sel.value = x.cal;
+    markScenarioInput(sel, x);
+    sel.addEventListener('change', () => {
+      x.cal = parseFloat(sel.value) || 0;
+      markScenarioInput(sel, x);
+      document.getElementById('plan-hit-msg').innerHTML = '';
+      renderPlanResult();
+    });
   });
 
   body.querySelectorAll('.scn-day').forEach(b => b.addEventListener('click', () => {
-    const x = scenario.days[+b.dataset.i];
-    x.cal = x.target;
-    const inp = body.querySelector('select[data-i="' + b.dataset.i + '"]');
-    inp.value = x.target;
-    markScenarioInput(inp, x);
-    renderScenarioResult();
+    const x = plan.days[+b.dataset.i];
+    if (x.past) return;
+    setPlanDay(+b.dataset.i, x.target);
+    document.getElementById('plan-hit-msg').innerHTML = '';
+    renderPlanResult();
   }));
-  body.querySelectorAll('select[data-i]').forEach(inp => {
-    markScenarioInput(inp, scenario.days[+inp.dataset.i]);
-    inp.addEventListener('change', () => {
-      const x = scenario.days[+inp.dataset.i];
-      const v = parseFloat(inp.value);
-      x.cal = (v >= 0) ? v : 0;
-      markScenarioInput(inp, x);
-      renderScenarioResult();
-    });
-  });
-  renderScenarioResult();
-  document.getElementById('scenario-modal').classList.add('show');
+
+  document.getElementById('plan-hit').addEventListener('click', hitPlanGoal);
+  renderPlanResult();
 }
 
-// Yellow outline on any field that isn't sitting at target.
+function setPlanDay(i, cal) {
+  const x = plan.days[i];
+  x.cal = cal;
+  const sel = document.querySelector('#plan-body select[data-i="' + i + '"]');
+  ensureCalOption(sel, cal);
+  sel.value = cal;
+  markScenarioInput(sel, x);
+}
+
+// Yellow outline on any day that isn't sitting at target.
 function markScenarioInput(inp, x) {
-  inp.classList.toggle('scn-edited', Number(x.cal) !== Number(x.target));
+  inp.classList.toggle('scn-edited', !x.past && Number(x.cal) !== Number(x.target));
 }
 
-function renderScenarioResult() {
-  const el = document.getElementById('scenario-result');
-  if (!scenario || !el) return;
-  const { cur, model, days } = scenario;
-  const today = todayStr();
+// Weight at the morning the week opens, and at the morning after it closes.
+function planWeights() {
+  const { cur, model, days } = plan;
   const tdee = getTDEE();
   const wStart = model[cur.prevAnchor] && model[cur.prevAnchor].weight ? model[cur.prevAnchor].weight.w : null;
-  if (wStart === null) {
+  if (wStart === null) return null;
+  let w = wStart;
+  days.forEach(x => {
+    const rec = model[x.d];
+    if (rec && rec.weight && rec.weight.type === 'actual') w = rec.weight.w;
+    w -= (tdee - Number(x.cal)) / 3500;
+  });
+  return { wStart, wEnd: w, loss: wStart - w };
+}
+
+function renderPlanResult() {
+  const el = document.getElementById('plan-result');
+  if (!plan || !el) return;
+  const pw = planWeights();
+  if (!pw) {
     el.innerHTML = '<div class="goal-opt"><b>No starting weight</b>Log a weigh-in on or before '
-      + dayTag(cur.prevAnchor) + ' to run a scenario.</div>';
+      + dayTag(plan.cur.prevAnchor) + ' to plan this week.</div>';
     return;
   }
-  const cal = {};
-  days.forEach(x => { cal[x.d] = x.cal; });
-
-  let w = wStart;
-  dateRange(cur.prevAnchor, addDays(cur.anchor, -1)).forEach(d => {
-    const rec = model[d];
-    if (rec && rec.weight && rec.weight.type === 'actual') w = rec.weight.w;
-    const intake = (d in cal) ? cal[d]
-      : (rec && rec.logged) ? rec.eaten : tdee;   // past days: logged, or TDEE
-    w -= (tdee - intake) / 3500;
-  });
-  const loss = wStart - w;
-  // A gain shows with a + in red, same convention as the weekly table.
+  const { wEnd, loss } = pw;
   const lossTxt = (loss >= 0 ? '' : '+') + Math.abs(loss).toFixed(2) + ' lbs';
-
+  const diff = loss - plan.goal;
+  const goalLine = plan.goal > 0
+    ? '<div class="goal-dim" style="margin-top:4px;">' + (diff >= 0
+        ? 'Goal ' + plan.goal.toFixed(2) + ': ahead by ' + diff.toFixed(2)
+        : 'Goal ' + plan.goal.toFixed(2) + ': short by ' + (-diff).toFixed(2)) + '</div>'
+    : '';
   el.innerHTML = '<div class="goal-opt">'
-    + '<b>' + dayTag(cur.anchor) + ' Start weight:</b>' + w.toFixed(1) + ' lbs'
+    + '<b>' + dayTag(plan.cur.anchor) + ' Start weight:</b>' + wEnd.toFixed(1) + ' lbs'
     + '<b style="margin-top:8px;">Total week loss:</b>'
     + '<span style="color:' + (loss >= 0 ? 'var(--green)' : 'var(--accent)') + '; font-weight:700;">' + lossTxt + '</span>'
+    + goalLine
     + '</div>';
 }
 
-document.getElementById('scenario-btn').addEventListener('click', () => openScenario(false));
-document.getElementById('scenario-modal-save').addEventListener('click', () => {
-  if (scenario) {
-    const cals = {};
-    scenario.days.forEach(x => { cals[x.d] = Number(x.cal); });
-    store.settings.scenario = { week: scenario.cur.prevAnchor, cals, savedOn: todayStr() };
-    saveStore(store);
-    showToast('Scenario saved');
-    document.getElementById('scenario-modal-sub').textContent =
-      'Week ending ' + dayTag(addDays(scenario.cur.anchor, -1)) + ' \u00b7 saved ' + dayTag(todayStr());
+function hitPlanGoal() {
+  const msg = document.getElementById('plan-hit-msg');
+  const say = (cls, head, text) => {
+    msg.innerHTML = '<div class="goal-opt"><b class="goal-head ' + cls + '" style="font-size:12px;">' + head + '</b>' + text + '</div>';
+  };
+  const pw = planWeights();
+  if (!pw) return;
+  if (!(plan.goal > 0)) return say('behind', 'No goal', 'Pick a goal above first.');
+  let need = (plan.goal - pw.loss) * 3500;
+  if (need <= 0) return say('ok', 'On track', 'Already at ' + pw.loss.toFixed(2) + ' lbs, '
+    + (pw.loss - plan.goal).toFixed(2) + ' to spare. Nothing changed.');
+
+  const adj = plan.days.map((x, i) => ({ i, x, room: Math.max(0, x.cal - x.floor), cut: 0 }))
+    .filter(a => !a.x.past && a.room > 0);
+  const room = adj.reduce((s, a) => s + a.room, 0);
+  if (adj.length === 0 || need > room) {
+    return say('no', 'Not doable', 'Needs ' + fmtCal(need) + ' cal less, but only ' + fmtCal(room)
+      + ' can come off without a day going under ' + fmtCal(PLAN_MIN_DAY) + ' (or under what’s logged today).');
   }
+
+  // Flat cut rounded up to 50; a day that can't take all of it gives what
+  // it can and the remainder is spread over the others.
+  let open = adj.slice();
+  while (need > 0 && open.length) {
+    const per = Math.ceil(need / open.length / 50) * 50;
+    open.forEach(a => {
+      if (need <= 0) return;
+      const take = Math.min(per, a.room - a.cut);
+      a.cut += take; need -= take;
+    });
+    open = open.filter(a => a.room - a.cut > 0);
+  }
+  adj.forEach(a => { if (a.cut > 0) setPlanDay(a.i, a.x.cal - a.cut); });
+  renderPlanResult();
+
+  const cuts = [...new Set(adj.map(a => a.cut))];
+  const how = cuts.length === 1
+    ? fmtCal(cuts[0]) + ' off each of ' + adj.length + ' day' + (adj.length === 1 ? '' : 's')
+    : adj.filter(a => a.cut > 0).map(a => SHORT_DAY[parseDate(a.x.d).getDay()] + ' −' + fmtCal(a.cut)).join(', ');
+  say('ok', 'Done', how + '.');
+}
+
+document.getElementById('plan-save').addEventListener('click', () => {
+  if (!plan) return;
+  const cals = {};
+  plan.days.filter(x => !x.past).forEach(x => { cals[x.d] = Number(x.cal); });
+  store.settings.plan = { week: plan.cur.prevAnchor, goal: plan.goal, cals, savedOn: todayStr() };
+  saveStore(store);
+  showToast('Plan saved');
+  document.getElementById('plan-sub').textContent =
+    'Week ending ' + dayTag(addDays(plan.cur.anchor, -1)) + ' · saved ' + dayTag(todayStr());
 });
-// Reset only rebuilds the fields from what's logged right now. The saved
-// snapshot is left alone until Save is pressed.
-document.getElementById('scenario-modal-reset').addEventListener('click', () => openScenario(true));
-document.getElementById('scenario-modal-ok').addEventListener('click', () =>
-  document.getElementById('scenario-modal').classList.remove('show'));
-document.getElementById('scenario-modal').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('scenario-modal')) e.target.classList.remove('show');
-});
+// Reset refills from what's logged now and the Settings goal. The saved
+// plan is left alone until Save is pressed.
+document.getElementById('plan-reset').addEventListener('click', () => renderPlan(true));
 
 // ============================================================
 // SETTINGS
