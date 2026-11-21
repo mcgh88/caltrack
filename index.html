@@ -35,6 +35,11 @@
                  Spread out, Spare and their two switches removed.
                  Every result shows how today was counted; Behind
                  says how many days the cut is over.
+     2026-11-21  Week tab: Scenario popup. One calorie field per day
+                 left in the week (today = logged, rest = target);
+                 tap a day to reset it to target. Shows this
+                 morning's weight, week loss and next week-start
+                 morning weight.
      =========================================================== -->
 <html lang="en">
 <head>
@@ -354,6 +359,15 @@ input[type="date"] { -webkit-appearance: none; }
 .wk-sticky .panel-header { margin-bottom: 8px; }
 .wk-table th { top: calc(var(--wk-head, 0px) - 20px); }
 .wk-controls .btn { margin-left: auto; }
+.wk-controls .btn + .btn { margin-left: 0; }
+#scenario-modal .modal { max-height: 90vh; overflow-y: auto; }
+.scn-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.scn-row .scn-day { flex: 0 0 96px; padding: 10px 8px; font-size: 12px; }
+.scn-row input { flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--text-faint); border-radius: 8px;
+  color: var(--text); font-family: var(--mono); font-size: 16px; padding: 9px 10px; text-align: right; outline: none; }
+.scn-row input:focus { border-color: var(--accent); }
+.scn-row input.scn-edited { border-color: var(--yellow); }
+.scn-note { color: var(--text-dim); font-size: 11px; margin-top: 10px; }
 
 /* Goal popup */
 .goal-body { font-family: var(--mono); font-size: 13px; line-height: 1.6; color: var(--text); margin-bottom: 20px; }
@@ -533,6 +547,7 @@ input[type="date"] { -webkit-appearance: none; }
         <span class="switch"><input type="checkbox" id="toggle-week-today"><span class="track"></span></span>
       </label>
       <button class="btn btn-sm btn-outline" id="check-goal-btn">Check goal</button>
+      <button class="btn btn-sm btn-outline" id="scenario-btn">Scenario</button>
     </div>
   </div>
   <div id="weekly-table"></div>
@@ -664,6 +679,18 @@ input[type="date"] { -webkit-appearance: none; }
     <div class="goal-body" id="goal-modal-body"></div>
     <div class="modal-buttons">
       <button class="btn btn-green" id="goal-modal-ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCENARIO MODAL -->
+<div class="modal-overlay" id="scenario-modal">
+  <div class="modal">
+    <div class="modal-title">Scenario</div>
+    <div class="modal-subtitle" id="scenario-modal-sub"></div>
+    <div class="goal-body" id="scenario-modal-body"></div>
+    <div class="modal-buttons">
+      <button class="btn btn-green" id="scenario-modal-ok">OK</button>
     </div>
   </div>
 </div>
@@ -1953,6 +1980,125 @@ document.getElementById('goal-modal-ok').addEventListener('click', () =>
   document.getElementById('goal-modal').classList.remove('show'));
 document.getElementById('goal-modal').addEventListener('click', (e) => {
   if (e.target === document.getElementById('goal-modal')) e.target.classList.remove('show');
+});
+
+// ============================================================
+// SCENARIO
+//
+// A what-if for the rest of the current week. One calorie field per day
+// from today to the week's last day: today starts at what's logged (target
+// if nothing is logged yet), later days at target. Tapping a day button
+// puts that day back to target. Days before today run the usual way
+// (logged, or TDEE when unlogged), and an actual weigh-in inside the week
+// resets the chain exactly as projectedWeekEndWeight() does. Nothing here
+// is saved; it ignores the Count-today toggle.
+// ============================================================
+let scenario = null;   // { cur, model, days: [{ d, target, cal }] }
+
+function openScenario() {
+  const sub = document.getElementById('scenario-modal-sub');
+  const body = document.getElementById('scenario-modal-body');
+  const cur = buildWeeklyRows().find(r => r.inProgress);
+  scenario = null;
+  if (!cur) {
+    sub.textContent = '';
+    body.innerHTML = '<div class="goal-head behind">No week in progress</div>Today isn\u2019t inside the range set in Settings.';
+    document.getElementById('scenario-modal').classList.add('show');
+    return;
+  }
+  const today = todayStr();
+  const model = buildDayModel();
+  const days = dateRange(today, addDays(cur.anchor, -1)).map(d => {
+    const rec = model[d];
+    const target = rec ? rec.target : getTargetForDate(d);
+    const cal = (d === today && rec && rec.logged) ? Math.round(rec.eaten) : target;
+    return { d, target, cal };
+  });
+  scenario = { cur, model, days };
+
+  sub.textContent = 'Week ' + dayTag(cur.prevAnchor) + ' \u2013 ' + dayTag(addDays(cur.anchor, -1));
+  const tRec = model[today];
+  const todayNote = (tRec && tRec.logged)
+    ? 'Today starts at what\u2019s logged (' + fmtCal(tRec.eaten) + '). Tap a day to reset it to target.'
+    : 'Nothing logged today, so it starts at target. Tap a day to reset it to target.';
+  body.innerHTML = days.map((x, i) =>
+      '<div class="scn-row"><button class="btn btn-outline scn-day" data-i="' + i + '">'
+      + (x.d === today ? 'Today ' + SHORT_DAY[parseDate(x.d).getDay()] : dayTag(x.d)) + '</button>'
+      + '<input type="number" inputmode="numeric" step="1" min="0" data-i="' + i + '" value="' + x.cal + '"></div>'
+    ).join('')
+    + '<div class="scn-note">' + todayNote + '</div>'
+    + '<div id="scenario-result"></div>';
+
+  body.querySelectorAll('.scn-day').forEach(b => b.addEventListener('click', () => {
+    const x = scenario.days[+b.dataset.i];
+    x.cal = x.target;
+    const inp = body.querySelector('input[data-i="' + b.dataset.i + '"]');
+    inp.value = x.target;
+    markScenarioInput(inp, x);
+    renderScenarioResult();
+  }));
+  body.querySelectorAll('input[data-i]').forEach(inp => {
+    markScenarioInput(inp, scenario.days[+inp.dataset.i]);
+    inp.addEventListener('input', () => {
+      const x = scenario.days[+inp.dataset.i];
+      const v = parseFloat(inp.value);
+      x.cal = (v >= 0) ? v : 0;
+      markScenarioInput(inp, x);
+      renderScenarioResult();
+    });
+  });
+  renderScenarioResult();
+  document.getElementById('scenario-modal').classList.add('show');
+}
+
+// Yellow outline on any field that isn't sitting at target.
+function markScenarioInput(inp, x) {
+  inp.classList.toggle('scn-edited', Number(x.cal) !== Number(x.target));
+}
+
+function renderScenarioResult() {
+  const el = document.getElementById('scenario-result');
+  if (!scenario || !el) return;
+  const { cur, model, days } = scenario;
+  const today = todayStr();
+  const tdee = getTDEE();
+  const wStart = model[cur.prevAnchor] && model[cur.prevAnchor].weight ? model[cur.prevAnchor].weight.w : null;
+  if (wStart === null) {
+    el.innerHTML = '<div class="goal-opt"><b>No starting weight</b>Log a weigh-in on or before '
+      + dayTag(cur.prevAnchor) + ' to run a scenario.</div>';
+    return;
+  }
+  const cal = {};
+  days.forEach(x => { cal[x.d] = x.cal; });
+
+  let w = wStart, wToday = null;
+  dateRange(cur.prevAnchor, addDays(cur.anchor, -1)).forEach(d => {
+    const rec = model[d];
+    if (rec && rec.weight && rec.weight.type === 'actual') w = rec.weight.w;
+    if (d === today) wToday = w;
+    const intake = (d in cal) ? cal[d]
+      : (rec && rec.logged) ? rec.eaten : tdee;   // past days: logged, or TDEE
+    w -= (tdee - intake) / 3500;
+  });
+  const loss = wStart - w;
+  const total = days.reduce((a, x) => a + Number(x.cal), 0);
+  const lossTxt = (loss >= 0 ? '' : '+') + Math.abs(loss).toFixed(2) + ' lbs';
+
+  el.innerHTML =
+      '<div class="goal-opt"><b>This morning (' + dayTag(today) + ')</b>' + wToday.toFixed(1) + ' lbs</div>'
+    + '<div class="goal-opt"><b>Week loss</b><span style="color:' + (loss >= 0 ? 'var(--green)' : 'var(--accent)')
+      + '; font-weight:700;">' + (loss >= 0 ? '' : 'gain ') + lossTxt + '</span>'
+      + ' <span class="goal-dim">from ' + wStart.toFixed(1) + '</span></div>'
+    + '<div class="goal-opt"><b>' + DAY_NAMES[parseDate(cur.anchor).getDay()] + ' morning (' + shortDate(cur.anchor) + ')</b>'
+      + w.toFixed(1) + ' lbs</div>'
+    + '<div class="scn-note">' + fmtCal(total) + ' cal over ' + days.length + ' day' + (days.length === 1 ? '' : 's') + '.</div>';
+}
+
+document.getElementById('scenario-btn').addEventListener('click', openScenario);
+document.getElementById('scenario-modal-ok').addEventListener('click', () =>
+  document.getElementById('scenario-modal').classList.remove('show'));
+document.getElementById('scenario-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('scenario-modal')) e.target.classList.remove('show');
 });
 
 // ============================================================
