@@ -43,6 +43,10 @@
      2026-11-21  Scenario: calorie pickers 0-3500 by 50, one result
                  box (next week-start weight + week loss), notes
                  dropped, button reads Exit.
+     2026-11-21  Scenario: Save / Reset / Exit. Save keeps the day
+                 values for this week; Reset clears it back to
+                 today = logged, rest = target. Past days always
+                 come from what's logged.
      =========================================================== -->
 <html lang="en">
 <head>
@@ -693,7 +697,9 @@ input[type="date"] { -webkit-appearance: none; }
     <div class="modal-subtitle" id="scenario-modal-sub"></div>
     <div class="goal-body" id="scenario-modal-body"></div>
     <div class="modal-buttons">
-      <button class="btn btn-green" id="scenario-modal-ok">Exit</button>
+      <button class="btn btn-green" id="scenario-modal-save">Save</button>
+      <button class="btn btn-outline" id="scenario-modal-reset">Reset</button>
+      <button class="btn btn-outline" id="scenario-modal-ok">Exit</button>
     </div>
   </div>
 </div>
@@ -1998,7 +2004,16 @@ document.getElementById('goal-modal').addEventListener('click', (e) => {
 // ============================================================
 let scenario = null;   // { cur, model, days: [{ d, target, cal }] }
 
-function openScenario() {
+// A saved scenario lives in settings as { week: <week start>, cals: { date: cal },
+// savedOn }. It only applies to the week it was saved in, and only to days
+// that are still today or ahead; days that have since passed come from what
+// was actually logged, like everywhere else.
+function savedScenarioFor(cur) {
+  const sv = store.settings.scenario;
+  return (sv && sv.week === cur.prevAnchor && sv.cals) ? sv : null;
+}
+
+function openScenario(fresh) {
   const sub = document.getElementById('scenario-modal-sub');
   const body = document.getElementById('scenario-modal-body');
   const cur = buildWeeklyRows().find(r => r.inProgress);
@@ -2011,15 +2026,18 @@ function openScenario() {
   }
   const today = todayStr();
   const model = buildDayModel();
+  const saved = fresh ? null : savedScenarioFor(cur);
   const days = dateRange(today, addDays(cur.anchor, -1)).map(d => {
     const rec = model[d];
     const target = rec ? rec.target : getTargetForDate(d);
-    const cal = (d === today && rec && rec.logged) ? Math.round(rec.eaten) : target;
+    let cal = (d === today && rec && rec.logged) ? Math.round(rec.eaten) : target;
+    if (saved && saved.cals[d] !== undefined) cal = saved.cals[d];
     return { d, target, cal };
   });
   scenario = { cur, model, days };
 
-  sub.textContent = 'Week ending ' + dayTag(addDays(cur.anchor, -1));
+  sub.textContent = 'Week ending ' + dayTag(addDays(cur.anchor, -1))
+    + (saved ? ' \u00b7 saved ' + dayTag(saved.savedOn) : '');
   body.innerHTML = days.map((x, i) =>
       '<div class="scn-row"><button class="btn btn-outline scn-day" data-i="' + i + '">'
       + (x.d === today ? 'Today ' + SHORT_DAY[parseDate(x.d).getDay()] : dayTag(x.d)) + '</button>'
@@ -2102,7 +2120,23 @@ function renderScenarioResult() {
     + '</div>';
 }
 
-document.getElementById('scenario-btn').addEventListener('click', openScenario);
+document.getElementById('scenario-btn').addEventListener('click', () => openScenario(false));
+document.getElementById('scenario-modal-save').addEventListener('click', () => {
+  if (scenario) {
+    const cals = {};
+    scenario.days.forEach(x => { cals[x.d] = Number(x.cal); });
+    store.settings.scenario = { week: scenario.cur.prevAnchor, cals, savedOn: todayStr() };
+    saveStore(store);
+    showToast('Scenario saved');
+  }
+  document.getElementById('scenario-modal').classList.remove('show');
+});
+// Reset drops the saved snapshot and rebuilds from what's logged right now.
+document.getElementById('scenario-modal-reset').addEventListener('click', () => {
+  delete store.settings.scenario;
+  saveStore(store);
+  openScenario(true);
+});
 document.getElementById('scenario-modal-ok').addEventListener('click', () =>
   document.getElementById('scenario-modal').classList.remove('show'));
 document.getElementById('scenario-modal').addEventListener('click', (e) => {
