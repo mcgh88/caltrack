@@ -43,10 +43,11 @@
      2026-11-21  Scenario: calorie pickers 0-3500 by 50, one result
                  box (next week-start weight + week loss), notes
                  dropped, button reads Exit.
-     2026-11-21  Scenario: Save / Reset / Exit. Save keeps the day
-                 values for this week; Reset clears it back to
-                 today = logged, rest = target. Past days always
-                 come from what's logged.
+     2026-11-21  Scenario: Save / Reset / Exit, each does only that.
+                 Save keeps the day values for this week (popup stays
+                 open); Reset refills today = logged, rest = target,
+                 without touching the save; Exit just closes. Past
+                 days always come from what's logged.
      =========================================================== -->
 <html lang="en">
 <head>
@@ -2128,15 +2129,13 @@ document.getElementById('scenario-modal-save').addEventListener('click', () => {
     store.settings.scenario = { week: scenario.cur.prevAnchor, cals, savedOn: todayStr() };
     saveStore(store);
     showToast('Scenario saved');
+    document.getElementById('scenario-modal-sub').textContent =
+      'Week ending ' + dayTag(addDays(scenario.cur.anchor, -1)) + ' \u00b7 saved ' + dayTag(todayStr());
   }
-  document.getElementById('scenario-modal').classList.remove('show');
 });
-// Reset drops the saved snapshot and rebuilds from what's logged right now.
-document.getElementById('scenario-modal-reset').addEventListener('click', () => {
-  delete store.settings.scenario;
-  saveStore(store);
-  openScenario(true);
-});
+// Reset only rebuilds the fields from what's logged right now. The saved
+// snapshot is left alone until Save is pressed.
+document.getElementById('scenario-modal-reset').addEventListener('click', () => openScenario(true));
 document.getElementById('scenario-modal-ok').addEventListener('click', () =>
   document.getElementById('scenario-modal').classList.remove('show'));
 document.getElementById('scenario-modal').addEventListener('click', (e) => {
