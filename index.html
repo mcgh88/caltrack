@@ -55,6 +55,9 @@
                  flat cut per day, rounded to 50, down to 0/day but
                  never under today's logged; else "Not doable".
                  Save / Reset. Nothing on Plan affects other views.
+     2026-11-21  Plan: today's day button flips target <-> actual.
+                 Each day tagged (target / actual / TDEE / to goal /
+                 manual). Hit goal can take days down to 0.
      =========================================================== -->
 <html lang="en">
 <head>
@@ -376,13 +379,14 @@ input[type="date"] { -webkit-appearance: none; }
 .wk-controls .btn { margin-left: auto; }
 .wk-controls .btn + .btn { margin-left: 0; }
 .scn-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-.scn-row .scn-day { flex: 0 0 96px; padding: 10px 8px; font-size: 12px; }
+.scn-row .scn-day { flex: 0 0 88px; padding: 10px 8px; font-size: 12px; }
 .scn-row select { flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--text-faint); border-radius: 8px;
   color: var(--text); font-family: var(--mono); font-size: 16px; padding: 9px 10px; text-align: right; outline: none; }
 .scn-row select:focus { border-color: var(--accent); }
 .scn-row select.scn-edited { border-color: var(--yellow); }
-.scn-row .scn-lbl { flex: 0 0 96px; font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
+.scn-row .scn-lbl { flex: 0 0 88px; font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
 .scn-past { opacity: 0.4; }
+.scn-tag { flex: 0 0 62px; font-family: var(--mono); font-size: 10px; color: var(--text-dim); white-space: nowrap; }
 .scn-past select, .scn-past .scn-day { pointer-events: none; }
 .plan-buttons { display: flex; gap: 8px; margin-top: 16px; }
 .plan-buttons .btn { flex: 1; }
@@ -1953,11 +1957,15 @@ function renderPlan(fresh) {
     const rec = model[d];
     const target = rec ? rec.target : getTargetForDate(d);
     const logged = rec && rec.logged ? Math.round(rec.eaten) : null;
-    if (d < today) return { d, past: true, target, floor: 0, cal: logged !== null ? logged : tdee, unlogged: logged === null };
-    let cal = (d === today && logged !== null) ? logged : target;
-    if (saved && saved.cals[d] !== undefined) cal = saved.cals[d];
-    const floor = Math.max(PLAN_MIN_DAY, d === today && logged !== null ? logged : 0);
-    return { d, past: false, target, floor, cal };
+    if (d < today) return { d, past: true, target, floor: 0,
+      cal: logged !== null ? logged : tdee, src: logged !== null ? 'actual' : 'TDEE' };
+    const isToday = d === today;
+    const x = { d, past: false, isToday, target, logged: isToday ? (logged || 0) : null,
+      floor: Math.max(PLAN_MIN_DAY, isToday && logged !== null ? logged : 0),
+      cal: (isToday && logged !== null) ? logged : target };
+    if (saved && saved.cals[d] !== undefined) x.cal = saved.cals[d];
+    x.src = (saved && saved.srcs && saved.srcs[d] && saved.cals[d] === x.cal) ? saved.srcs[d] : planSrc(x);
+    return x;
   });
   const settingsGoal = store.settings.weeklyGoal > 0 ? store.settings.weeklyGoal : 0;
   const goal = (saved && typeof saved.goal === 'number') ? saved.goal : settingsGoal;
@@ -1967,14 +1975,14 @@ function renderPlan(fresh) {
     + (saved ? ' · saved ' + dayTag(saved.savedOn) : '');
 
   body.innerHTML =
-      '<div class="scn-row"><span class="scn-lbl">Goal (lbs)</span><select id="plan-goal"></select></div>'
+      '<div class="scn-row"><span class="scn-lbl">Goal (lbs)</span><select id="plan-goal"></select><span class="scn-tag"></span></div>'
     + days.map((x, i) =>
         '<div class="scn-row' + (x.past ? ' scn-past' : '') + '">'
         + '<button class="btn btn-outline scn-day" data-i="' + i + '"' + (x.past ? ' disabled' : '') + '>'
         + (x.d === today ? 'Today ' + SHORT_DAY[parseDate(x.d).getDay()] : dayTag(x.d)) + '</button>'
-        + '<select data-i="' + i + '"' + (x.past ? ' disabled' : '') + '></select></div>'
+        + '<select data-i="' + i + '"' + (x.past ? ' disabled' : '') + '></select>'
+        + '<span class="scn-tag" data-i="' + i + '">(' + x.src + ')</span></div>'
       ).join('')
-    + (days.some(x => x.unlogged) ? '<div class="scn-note">Unlogged past days count at TDEE.</div>' : '')
     + '<button class="btn btn-outline" id="plan-hit" style="width:100%; margin-top:14px;">Hit goal</button>'
     + '<div id="plan-hit-msg"></div>'
     + '<div id="plan-result"></div>';
@@ -2010,7 +2018,9 @@ function renderPlan(fresh) {
     markScenarioInput(sel, x);
     sel.addEventListener('change', () => {
       x.cal = parseFloat(sel.value) || 0;
+      x.src = planSrc(x);
       markScenarioInput(sel, x);
+      setPlanTag(+sel.dataset.i);
       document.getElementById('plan-hit-msg').innerHTML = '';
       renderPlanResult();
     });
@@ -2019,7 +2029,9 @@ function renderPlan(fresh) {
   body.querySelectorAll('.scn-day').forEach(b => b.addEventListener('click', () => {
     const x = plan.days[+b.dataset.i];
     if (x.past) return;
-    setPlanDay(+b.dataset.i, x.target);
+    // Today flips between target and what's logged; other days go to target.
+    if (x.isToday && x.src === 'target') setPlanDay(+b.dataset.i, x.logged, 'actual');
+    else setPlanDay(+b.dataset.i, x.target, 'target');
     document.getElementById('plan-hit-msg').innerHTML = '';
     renderPlanResult();
   }));
@@ -2028,13 +2040,29 @@ function renderPlan(fresh) {
   renderPlanResult();
 }
 
-function setPlanDay(i, cal) {
+// Where a day's number came from, shown beside its picker:
+//   target, actual (logged), TDEE (unlogged past day), to goal (set by
+//   Hit goal) or manual (picked on the wheel).
+function planSrc(x) {
+  if (Number(x.cal) === Number(x.target)) return 'target';
+  if (x.isToday && Number(x.cal) === Number(x.logged)) return 'actual';
+  return 'manual';
+}
+
+function setPlanTag(i) {
+  const t = document.querySelector('#plan-body .scn-tag[data-i="' + i + '"]');
+  if (t) t.textContent = '(' + plan.days[i].src + ')';
+}
+
+function setPlanDay(i, cal, src) {
   const x = plan.days[i];
   x.cal = cal;
+  x.src = src || planSrc(x);
   const sel = document.querySelector('#plan-body select[data-i="' + i + '"]');
   ensureCalOption(sel, cal);
   sel.value = cal;
   markScenarioInput(sel, x);
+  setPlanTag(i);
 }
 
 // Yellow outline on any day that isn't sitting at target.
@@ -2114,7 +2142,7 @@ function hitPlanGoal() {
     });
     open = open.filter(a => a.room - a.cut > 0);
   }
-  adj.forEach(a => { if (a.cut > 0) setPlanDay(a.i, a.x.cal - a.cut); });
+  adj.forEach(a => { if (a.cut > 0) setPlanDay(a.i, a.x.cal - a.cut, 'to goal'); });
   renderPlanResult();
 
   const cuts = [...new Set(adj.map(a => a.cut))];
@@ -2126,9 +2154,9 @@ function hitPlanGoal() {
 
 document.getElementById('plan-save').addEventListener('click', () => {
   if (!plan) return;
-  const cals = {};
-  plan.days.filter(x => !x.past).forEach(x => { cals[x.d] = Number(x.cal); });
-  store.settings.plan = { week: plan.cur.prevAnchor, goal: plan.goal, cals, savedOn: todayStr() };
+  const cals = {}, srcs = {};
+  plan.days.filter(x => !x.past).forEach(x => { cals[x.d] = Number(x.cal); srcs[x.d] = x.src; });
+  store.settings.plan = { week: plan.cur.prevAnchor, goal: plan.goal, cals, srcs, savedOn: todayStr() };
   saveStore(store);
   showToast('Plan saved');
   document.getElementById('plan-sub').textContent =
