@@ -52,7 +52,7 @@
                  Scenario buttons removed from Week. Whole week
                  listed, past days greyed at actuals. Goal picker
                  0-4 by 0.25 (from Settings, local only). Hit goal:
-                 flat cut per day, rounded to 50, min 1000/day and
+                 flat cut per day, rounded to 50, down to 0/day but
                  never under today's logged; else "Not doable".
                  Save / Reset. Nothing on Plan affects other views.
      =========================================================== -->
@@ -1916,13 +1916,13 @@ window.addEventListener('resize', setWeeklyHeadOffset);
 // the chain, the same as projectedWeekEndWeight().
 //
 // Hit goal takes a flat amount off each adjustable day, rounded up to 50.
-// A day never goes below PLAN_MIN_DAY, and today never goes below what's
-// already logged; anything a day can't absorb is spread over the rest.
+// A day can go down to PLAN_MIN_DAY (0, fasting allowed), and today never
+// goes below what's already logged; anything a day can't absorb is spread over the rest.
 // ============================================================
 const SHORT_DAY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const dayTag = (d) => SHORT_DAY[parseDate(d).getDay()] + ' ' + shortDate(d);
 const fmtCal = (n) => Math.round(n).toLocaleString();
-const PLAN_MIN_DAY = 1000;
+const PLAN_MIN_DAY = 0;
 
 let plan = null;   // { cur, model, goal, days: [{ d, past, target, floor, cal }] }
 
@@ -2099,7 +2099,7 @@ function hitPlanGoal() {
   const room = adj.reduce((s, a) => s + a.room, 0);
   if (adj.length === 0 || need > room) {
     return say('no', 'Not doable', 'Needs ' + fmtCal(need) + ' cal less, but only ' + fmtCal(room)
-      + ' can come off without a day going under ' + fmtCal(PLAN_MIN_DAY) + ' (or under what’s logged today).');
+      + ' can come off, even taking every day ahead to 0 and today to what’s logged.');
   }
 
   // Flat cut rounded up to 50; a day that can't take all of it gives what
@@ -2118,8 +2118,8 @@ function hitPlanGoal() {
   renderPlanResult();
 
   const cuts = [...new Set(adj.map(a => a.cut))];
-  const how = cuts.length === 1
-    ? fmtCal(cuts[0]) + ' off each of ' + adj.length + ' day' + (adj.length === 1 ? '' : 's')
+  const how = (cuts.length === 1 && adj.length > 1)
+    ? fmtCal(cuts[0]) + ' off each of ' + adj.length + ' days'
     : adj.filter(a => a.cut > 0).map(a => SHORT_DAY[parseDate(a.x.d).getDay()] + ' −' + fmtCal(a.cut)).join(', ');
   say('ok', 'Done', how + '.');
 }
