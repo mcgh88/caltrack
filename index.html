@@ -168,6 +168,26 @@ html, body {
 .cal-summary .remaining.under { color: var(--green); }
 .cal-summary .of-target { font-size: 12px; color: var(--text-dim); }
 .cal-summary #day-remaining { cursor: pointer; }
+.wheel-wrap { position: relative; height: 180px; margin-bottom: 20px; }
+.wheel-wrap::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 72px; height: 36px;
+  border-top: 1px solid var(--accent); border-bottom: 1px solid var(--accent);
+  pointer-events: none;
+}
+.wheel-wrap::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(var(--surface), transparent 35%, transparent 65%, var(--surface));
+}
+.wheel {
+  height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.wheel::-webkit-scrollbar { display: none; }
+.wheel .wheel-pad { height: 72px; }
+.wheel .wheel-item {
+  height: 36px; line-height: 36px; text-align: center; scroll-snap-align: center;
+  font-family: var(--mono); font-size: 20px; color: var(--text);
+}
 .cal-summary .manual-note { font-size: 11px; font-family: var(--mono); color: var(--yellow); margin-top: 2px; }
 
 .cal-bar-wrap {
@@ -715,10 +735,7 @@ input[type="date"] { -webkit-appearance: none; }
   <div class="modal">
     <div class="modal-title">Cals Left</div>
     <div class="modal-subtitle" id="left-modal-date"></div>
-    <div class="modal-input-wrap">
-      <input type="number" id="left-modal-input" placeholder="—" step="1" inputmode="numeric">
-      <span class="weight-unit">left</span>
-    </div>
+    <div class="wheel-wrap"><div class="wheel" id="left-wheel"></div></div>
     <div class="modal-subtitle" style="margin:-8px 0 20px;font-size:11px;">Display only, this day only. Doesn't change targets or any other numbers.</div>
     <div class="modal-buttons">
       <button class="btn btn-outline" id="left-modal-cancel">Cancel</button>
@@ -1208,17 +1225,28 @@ document.getElementById('day-remaining').addEventListener('click', () => {
   const hasManual = typeof day.manualTarget === 'number';
   const left = (hasManual ? day.manualTarget : getTargetForDate(currentDate)) - total;
   document.getElementById('left-modal-date').textContent = formatDate(currentDate);
-  document.getElementById('left-modal-input').value = left;
   document.getElementById('left-modal-clear').style.display = hasManual ? 'block' : 'none';
   document.getElementById('left-modal').classList.add('show');
-  setTimeout(() => { const i = document.getElementById('left-modal-input'); i.focus(); i.select(); }, 100);
+  buildLeftWheel();
+  const idx = Math.max(0, Math.min(LEFT_MAX / LEFT_STEP, Math.round(left / LEFT_STEP)));
+  document.getElementById('left-wheel').scrollTop = idx * WHEEL_ITEM_H;
 });
+const LEFT_MAX = 3500, LEFT_STEP = 50, WHEEL_ITEM_H = 36;
+function buildLeftWheel() {
+  const w = document.getElementById('left-wheel');
+  if (w.childElementCount) return;
+  let html = '<div class="wheel-pad"></div>';
+  for (let v = 0; v <= LEFT_MAX; v += LEFT_STEP) html += '<div class="wheel-item">' + v.toLocaleString() + '</div>';
+  w.innerHTML = html + '<div class="wheel-pad"></div>';
+}
+function leftWheelValue() {
+  const idx = Math.round(document.getElementById('left-wheel').scrollTop / WHEEL_ITEM_H);
+  return Math.max(0, Math.min(LEFT_MAX, idx * LEFT_STEP));
+}
 function closeLeftModal() { document.getElementById('left-modal').classList.remove('show'); }
 document.getElementById('left-modal-save').addEventListener('click', () => {
-  const val = parseInt(document.getElementById('left-modal-input').value, 10);
   const day = getDay(store, currentDate);
-  if (isNaN(val)) delete day.manualTarget;
-  else day.manualTarget = dayTotal(day) + val;
+  day.manualTarget = dayTotal(day) + leftWheelValue();
   saveStore(store); closeLeftModal(); renderDay();
 });
 document.getElementById('left-modal-clear').addEventListener('click', () => {
@@ -1229,10 +1257,6 @@ document.getElementById('left-modal-clear').addEventListener('click', () => {
 document.getElementById('left-modal-cancel').addEventListener('click', closeLeftModal);
 document.getElementById('left-modal').addEventListener('click', (e) => {
   if (e.target === document.getElementById('left-modal')) closeLeftModal();
-});
-document.getElementById('left-modal-input').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') document.getElementById('left-modal-save').click();
-  if (e.key === 'Escape') closeLeftModal();
 });
 
 // ============================================================
