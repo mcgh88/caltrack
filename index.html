@@ -538,7 +538,6 @@ input[type="date"] { -webkit-appearance: none; }
     <div class="target-info">
       <div class="remaining under" id="day-remaining">0 left</div>
       <div class="of-target" id="day-target-label">of 0 target</div>
-      <div class="manual-note" id="day-manual-note" style="display:none;"></div>
     </div>
   </div>
   <div class="cal-bar-wrap"><div class="cal-bar" id="day-bar"></div></div>
@@ -1078,10 +1077,11 @@ function renderDay() {
     remEl.textContent = Math.abs(remaining).toLocaleString() + ' over';
     remEl.className = 'remaining over';
   }
-  document.getElementById('day-target-label').textContent = 'of ' + target.toLocaleString() + (isWeekend ? ' (wknd)' : ' (wkday)');
-  const noteEl = document.getElementById('day-manual-note');
-  noteEl.style.display = hasManual ? 'block' : 'none';
-  if (hasManual) noteEl.textContent = 'manual target ' + day.manualTarget.toLocaleString();
+  const tgtEl = document.getElementById('day-target-label');
+  tgtEl.textContent = hasManual
+    ? 'of ' + day.manualTarget.toLocaleString() + ' (manual target)'
+    : 'of ' + target.toLocaleString() + (isWeekend ? ' (wknd)' : ' (wkday)');
+  tgtEl.style.color = hasManual ? 'var(--yellow)' : '';
 
   const bar = document.getElementById('day-bar');
   const pct = target > 0 ? Math.max(0, Math.min((total / target) * 100, 100)) : 0;
