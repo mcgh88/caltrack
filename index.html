@@ -167,6 +167,8 @@ html, body {
 .cal-summary .remaining.over { color: var(--accent); }
 .cal-summary .remaining.under { color: var(--green); }
 .cal-summary .of-target { font-size: 12px; color: var(--text-dim); }
+.cal-summary #day-remaining { cursor: pointer; }
+.cal-summary .manual-note { font-size: 11px; font-family: var(--mono); color: var(--yellow); margin-top: 2px; }
 
 .cal-bar-wrap {
   height: 6px; background: var(--surface); border-radius: 3px;
@@ -516,6 +518,7 @@ input[type="date"] { -webkit-appearance: none; }
     <div class="target-info">
       <div class="remaining under" id="day-remaining">0 left</div>
       <div class="of-target" id="day-target-label">of 0 target</div>
+      <div class="manual-note" id="day-manual-note" style="display:none;"></div>
     </div>
   </div>
   <div class="cal-bar-wrap"><div class="cal-bar" id="day-bar"></div></div>
@@ -703,6 +706,24 @@ input[type="date"] { -webkit-appearance: none; }
       <button class="btn btn-outline" id="weight-modal-cancel">Cancel</button>
       <button class="btn btn-danger btn-sm" id="weight-modal-clear" style="display:none;">Clear</button>
       <button class="btn btn-green" id="weight-modal-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CALS LEFT MODAL (display-only override for one day) -->
+<div class="modal-overlay" id="left-modal">
+  <div class="modal">
+    <div class="modal-title">Cals Left</div>
+    <div class="modal-subtitle" id="left-modal-date"></div>
+    <div class="modal-input-wrap">
+      <input type="number" id="left-modal-input" placeholder="—" step="1" inputmode="numeric">
+      <span class="weight-unit">left</span>
+    </div>
+    <div class="modal-subtitle" style="margin:-8px 0 20px;font-size:11px;">Display only, this day only. Doesn't change targets or any other numbers.</div>
+    <div class="modal-buttons">
+      <button class="btn btn-outline" id="left-modal-cancel">Cancel</button>
+      <button class="btn btn-danger btn-sm" id="left-modal-clear" style="display:none;">Reset</button>
+      <button class="btn btn-green" id="left-modal-save">Save</button>
     </div>
   </div>
 </div>
@@ -1020,7 +1041,9 @@ function renderDay() {
   const day = getDay(store, currentDate);
   const target = getTargetForDate(currentDate);
   const total = dayTotal(day);
-  const remaining = target - total;
+  // Manual target is display-only: it only changes the "left/over" number.
+  const hasManual = typeof day.manualTarget === 'number';
+  const remaining = (hasManual ? day.manualTarget : target) - total;
   const isToday = currentDate === todayStr();
   const d = parseDate(currentDate);
   const isWeekend = (d.getDay() === 0 || d.getDay() === 6);
@@ -1039,6 +1062,9 @@ function renderDay() {
     remEl.className = 'remaining over';
   }
   document.getElementById('day-target-label').textContent = 'of ' + target.toLocaleString() + (isWeekend ? ' (wknd)' : ' (wkday)');
+  const noteEl = document.getElementById('day-manual-note');
+  noteEl.style.display = hasManual ? 'block' : 'none';
+  if (hasManual) noteEl.textContent = 'manual target ' + day.manualTarget.toLocaleString();
 
   const bar = document.getElementById('day-bar');
   const pct = target > 0 ? Math.max(0, Math.min((total / target) * 100, 100)) : 0;
@@ -1169,6 +1195,44 @@ document.getElementById('drink-toggle').addEventListener('click', () => {
   const day = getDay(store, currentDate);
   day.drinks = !day.drinks;
   saveStore(store); renderDay();
+});
+
+// ============================================================
+// CALS LEFT MODAL — display-only override of the "left" number for one day.
+// Stored as day.manualTarget (eaten + entered left) so it keeps counting down
+// as food is added. Nothing else reads this field.
+// ============================================================
+document.getElementById('day-remaining').addEventListener('click', () => {
+  const day = getDay(store, currentDate);
+  const total = dayTotal(day);
+  const hasManual = typeof day.manualTarget === 'number';
+  const left = (hasManual ? day.manualTarget : getTargetForDate(currentDate)) - total;
+  document.getElementById('left-modal-date').textContent = formatDate(currentDate);
+  document.getElementById('left-modal-input').value = left;
+  document.getElementById('left-modal-clear').style.display = hasManual ? 'block' : 'none';
+  document.getElementById('left-modal').classList.add('show');
+  setTimeout(() => { const i = document.getElementById('left-modal-input'); i.focus(); i.select(); }, 100);
+});
+function closeLeftModal() { document.getElementById('left-modal').classList.remove('show'); }
+document.getElementById('left-modal-save').addEventListener('click', () => {
+  const val = parseInt(document.getElementById('left-modal-input').value, 10);
+  const day = getDay(store, currentDate);
+  if (isNaN(val)) delete day.manualTarget;
+  else day.manualTarget = dayTotal(day) + val;
+  saveStore(store); closeLeftModal(); renderDay();
+});
+document.getElementById('left-modal-clear').addEventListener('click', () => {
+  const day = getDay(store, currentDate);
+  delete day.manualTarget;
+  saveStore(store); closeLeftModal(); renderDay();
+});
+document.getElementById('left-modal-cancel').addEventListener('click', closeLeftModal);
+document.getElementById('left-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('left-modal')) closeLeftModal();
+});
+document.getElementById('left-modal-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('left-modal-save').click();
+  if (e.key === 'Escape') closeLeftModal();
 });
 
 // ============================================================
