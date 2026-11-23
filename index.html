@@ -58,6 +58,9 @@
      2026-11-21  Plan: today's day button flips target <-> actual.
                  Each day tagged (target / actual / TDEE / to goal /
                  manual). Hit goal can take days down to 0.
+     2026-11-23  Settings // energy: "Today uses Plan" switch. Day tab
+                 target defaults to the saved Plan value for that day;
+                 labelled (plan) only when it differs from Settings.
      =========================================================== -->
 <html lang="en">
 <head>
@@ -643,6 +646,11 @@ input[type="date"] { -webkit-appearance: none; }
       <label>Weekend target (cal)</label>
       <select id="set-target-weekend"></select>
     </div>
+    <div class="setting-row">
+      <label>Today uses Plan</label>
+      <span class="switch"><input type="checkbox" id="set-day-use-plan"><span class="track"></span></span>
+    </div>
+    <div class="set-note">Today tab target comes from the saved Plan for that day. Marked (plan) only when it differs from the targets above.</div>
     <div id="weekly-projection" style="margin-top:12px;padding:10px;background:var(--bg);border-radius:8px;font-family:var(--mono);font-size:13px;color:var(--text-dim);"></div>
     <div style="font-size:11px;color:var(--text-faint);margin-top:8px;font-family:var(--mono);line-height:1.5;">Day colours &mdash; <span style="color:var(--green);">green</span>: at or under target &middot; <span style="color:var(--yellow);">yellow</span>: over target but under TDEE &middot; <span style="color:var(--accent);">red</span>: over TDEE &middot; <span style="color:var(--purple);">purple</span>: never logged, shown as &quot;!&quot; and counted as TDEE so weight holds flat.</div>
   </div>
@@ -835,6 +843,17 @@ function getTargetForDate(dateStr) {
   const isWeekend = (d.getDay() === 0 || d.getDay() === 6);
   const s = store.settings;
   return isWeekend ? (s.targetWeekend || 1750) : (s.targetWeekday || 1250);
+}
+
+// Target the Today tab starts from: the saved Plan value for that day when
+// the Settings switch is on and a plan was saved covering it, else Settings.
+// Only the Day panel reads this; every other view stays on getTargetForDate().
+function getDayTarget(dateStr) {
+  const base = getTargetForDate(dateStr);
+  const sv = store.settings.plan;
+  if (store.settings.dayUsePlan === true && sv && sv.cals && typeof sv.cals[dateStr] === 'number')
+    return { target: sv.cals[dateStr], fromPlan: sv.cals[dateStr] !== base };
+  return { target: base, fromPlan: false };
 }
 
 function getTDEE() { return store.settings.tdee || 2650; }
@@ -1055,7 +1074,7 @@ function goToDay(dateStr) {
 // ============================================================
 function renderDay() {
   const day = getDay(store, currentDate);
-  const target = getTargetForDate(currentDate);
+  const { target, fromPlan } = getDayTarget(currentDate);
   const total = dayTotal(day);
   // Manual target is display-only: it only changes the "left/over" number.
   const hasManual = typeof day.manualTarget === 'number';
@@ -1080,8 +1099,8 @@ function renderDay() {
   const tgtEl = document.getElementById('day-target-label');
   tgtEl.textContent = hasManual
     ? 'of ' + day.manualTarget.toLocaleString() + ' (manual target)'
-    : 'of ' + target.toLocaleString() + (isWeekend ? ' (wknd)' : ' (wkday)');
-  tgtEl.style.color = hasManual ? 'var(--yellow)' : '';
+    : 'of ' + target.toLocaleString() + (fromPlan ? ' (plan)' : isWeekend ? ' (wknd)' : ' (wkday)');
+  tgtEl.style.color = hasManual ? 'var(--yellow)' : fromPlan ? 'var(--blue)' : '';
 
   const bar = document.getElementById('day-bar');
   const pct = target > 0 ? Math.max(0, Math.min((total / target) * 100, 100)) : 0;
@@ -1222,7 +1241,7 @@ document.getElementById('day-remaining').addEventListener('click', () => {
   const day = getDay(store, currentDate);
   const total = dayTotal(day);
   const hasManual = typeof day.manualTarget === 'number';
-  const cur = hasManual ? day.manualTarget : getTargetForDate(currentDate);
+  const cur = hasManual ? day.manualTarget : getDayTarget(currentDate).target;
   document.getElementById('left-modal-date').textContent = formatDate(currentDate);
   document.getElementById('left-modal-clear').style.display = hasManual ? 'block' : 'none';
   document.getElementById('left-modal').classList.add('show');
@@ -2246,6 +2265,7 @@ document.getElementById('plan-save').addEventListener('click', () => {
   store.settings.plan = { week: plan.cur.prevAnchor, goal: plan.goal, cals, srcs, savedOn: todayStr() };
   saveStore(store);
   showToast('Plan saved');
+  renderDay();
   document.getElementById('plan-sub').textContent =
     'Week ending ' + dayTag(addDays(plan.cur.anchor, -1)) + ' · saved ' + dayTag(todayStr());
 });
@@ -2332,6 +2352,7 @@ function loadSettings() {
   document.getElementById('set-cal-weeks').value = calWeeks();
   document.getElementById('set-show-calday').checked = s.showCalDay !== false;
   document.getElementById('set-show-calchart').checked = s.showCalChart !== false;
+  document.getElementById('set-day-use-plan').checked = s.dayUsePlan === true;
   document.getElementById('set-four-week').checked = s.fourWeekTotal === true;
   document.getElementById('set-weekly-goal').value = (s.weeklyGoal > 0) ? s.weeklyGoal : '';
   updateSwitchNotes();
@@ -2359,6 +2380,7 @@ function saveSettingsNow() {
   store.settings.calWeeks = clampWeeks(document.getElementById('set-cal-weeks').value, 26);
   store.settings.showCalDay = document.getElementById('set-show-calday').checked;
   store.settings.showCalChart = document.getElementById('set-show-calchart').checked;
+  store.settings.dayUsePlan = document.getElementById('set-day-use-plan').checked;
   store.settings.fourWeekTotal = document.getElementById('set-four-week').checked;
   const goal = parseFloat(document.getElementById('set-weekly-goal').value);
   store.settings.weeklyGoal = (goal > 0) ? goal : null;
@@ -2367,7 +2389,7 @@ function saveSettingsNow() {
 }
 
 ['set-tdee', 'set-target-weekday', 'set-target-weekend', 'set-week-start', 'set-cal-start', 'set-cal-weeks',
- 'set-show-calday', 'set-show-calchart', 'set-four-week', 'set-weekly-goal']
+ 'set-show-calday', 'set-show-calchart', 'set-day-use-plan', 'set-four-week', 'set-weekly-goal']
   .forEach(id => document.getElementById(id).addEventListener('change', saveSettingsNow));
 
 function updateWeeklyProjection() {
